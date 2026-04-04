@@ -239,6 +239,8 @@ export const returnItems = mysqlTable("return_items", {
   returnId: int("return_id").notNull(),
   productId: int("product_id").notNull(),
   quantity: int("quantity").notNull(),
+  unitType: varchar("unit_type", { length: 20 }).notNull().default("PCS"),
+  conversionQty: int("conversion_qty").notNull().default(0),
   subtotal: decimal("subtotal", { precision: 12, scale: 2 }).notNull().default("0"),
   refundAmount: decimal("refund_amount", { precision: 10, scale: 2 }).notNull(),
 });

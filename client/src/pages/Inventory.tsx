@@ -915,30 +915,78 @@ export default function Inventory() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent ml-auto block">
+                              <div className={cn(
+                                "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border shadow-sm flex flex-col items-end",
+                                product.stock === 0 ? 'bg-red-50 text-red-700 border-red-100' : 
+                                product.stock < Number((product as any).minStock ?? 10) ? 'bg-amber-50 text-amber-700 border-amber-100' : 
+                                'bg-emerald-50 text-emerald-700 border-emerald-100'
+                              )}>
+                                {(() => {
+                                  const pcsPerCarton = Math.max(1, Number((product as any).pcsPerCarton ?? 1));
+                                  const supportsCarton = Boolean((product as any).supportsCarton) && pcsPerCarton > 1;
+                                  
+                                  if (!supportsCarton) return <span>{product.stock} PCS</span>;
+                                  
+                                  const cartons = Math.floor(Number(product.stock) / pcsPerCarton);
+                                  const rem = Number(product.stock) % pcsPerCarton;
+                                  
+                                  if (cartons > 0) {
+                                    return (
+                                      <>
+                                        <span>{cartons} KRT {rem > 0 && `+ ${rem} PCS`}</span>
+                                        <span className="text-[9px] opacity-70 font-medium">Tot: {product.stock} PCS</span>
+                                      </>
+                                    );
+                                  }
+                                  return <span>{product.stock} PCS</span>;
+                                })()}
+                              </div>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="p-3 bg-white border-slate-200 text-slate-900 shadow-xl">
+                            <div className="space-y-2">
+                              <div className="text-xs font-bold border-b pb-1">Rincian Stok Inventaris</div>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                                <span className="text-slate-500">Total Unit:</span>
+                                <span className="font-mono font-bold text-right">{product.stock} PCS</span>
+                                
+                                {(() => {
+                                  const pcsPerCarton = Math.max(1, Number((product as any).pcsPerCarton ?? 1));
+                                  const supportsCarton = Boolean((product as any).supportsCarton) && pcsPerCarton > 1;
+                                  if (!supportsCarton) return null;
+                                  const cartons = Math.floor(Number(product.stock) / pcsPerCarton);
+                                  const rem = Number(product.stock) % pcsPerCarton;
+                                  return (
+                                    <>
+                                      <span className="text-slate-500">Karton (@{pcsPerCarton}):</span>
+                                      <span className="font-mono font-bold text-right text-blue-600">{cartons} KRT</span>
+                                      <span className="text-slate-500">Sisa Satuan:</span>
+                                      <span className="font-mono font-bold text-right">{rem} PCS</span>
+                                    </>
+                                  );
+                                })()}
+                                
+                                <span className="text-slate-500 border-t pt-1 mt-1">Stok Minimum:</span>
+                                <span className="font-mono font-bold text-right border-t pt-1 mt-1">{product.minStock} PCS</span>
+                              </div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="ghost" className="h-auto p-0 hover:bg-transparent ml-auto block">
-                            <div className={cn(
-                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
-                              product.stock === 0 ? 'bg-red-50 text-red-700 border-red-100' : 
-                              product.stock < Number((product as any).minStock ?? 10) ? 'bg-amber-50 text-amber-700 border-amber-100' : 
-                              'bg-emerald-50 text-emerald-700 border-emerald-100'
-                            )}>
-                              {(() => {
-                                const pcsPerCarton = Math.max(1, Number((product as any).pcsPerCarton ?? 1));
-                                const supportsCarton = Boolean((product as any).supportsCarton) && pcsPerCarton > 1;
-                                if (!supportsCarton) return `${product.stock} pcs`;
-                                const cartons = Math.floor(Number(product.stock) / pcsPerCarton);
-                                const rem = Number(product.stock) % pcsPerCarton;
-                                return cartons > 0 ? `${cartons} k • ${rem} p` : `${product.stock} pcs`;
-                              })()}
-                            </div>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 mt-1 hover:bg-slate-100 rounded-full">
+                            <RefreshCw className="w-3 h-3 text-slate-400" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-56 p-3" align="end">
                           <div className="text-xs font-bold mb-2 px-1 text-slate-500 uppercase tracking-wider">Update Stok Cepat</div>
                           
-                          {/* PCS Controls */}
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-[10px] text-slate-400 px-1">
                               <span>Satuan (PCS)</span>
@@ -951,7 +999,6 @@ export default function Inventory() {
                             </div>
                           </div>
 
-                          {/* Carton Controls */}
                           {(() => {
                             const pcsPerCarton = Math.max(1, Number((product as any).pcsPerCarton ?? 1));
                             const supportsCarton = Boolean((product as any).supportsCarton) && pcsPerCarton > 1;
@@ -970,7 +1017,7 @@ export default function Inventory() {
                                       onClick={() => handleQuickStock(product, -pcsPerCarton)} 
                                       disabled={product.stock < pcsPerCarton}
                                     >
-                                      -1 Karton
+                                      -1 KRT
                                     </Button>
                                     <Button 
                                       variant="outline" 
@@ -978,7 +1025,7 @@ export default function Inventory() {
                                       className="h-8 text-blue-600 border-blue-100 hover:bg-blue-50" 
                                       onClick={() => handleQuickStock(product, pcsPerCarton)}
                                     >
-                                      +1 Karton
+                                      +1 KRT
                                     </Button>
                                   </div>
                                 </div>

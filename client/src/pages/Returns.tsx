@@ -416,7 +416,7 @@ export default function Returns() {
                         
                         // Calculate display units
                         let qtyDisplay = `${item.quantity} Pcs`;
-                        if (supportsCarton && item.quantity >= pcsPerCarton) {
+                        if (item.unitType === "CARTON" && supportsCarton) {
                           const cartons = Math.floor(item.quantity / pcsPerCarton);
                           const remainder = item.quantity % pcsPerCarton;
                           if (remainder === 0) {
@@ -424,21 +424,26 @@ export default function Returns() {
                           } else {
                             qtyDisplay = `${cartons} Karton + ${remainder} Pcs`;
                           }
+                        } else if (item.unitType === "GROSIR") {
+                          qtyDisplay = `${item.quantity} Pcs (Grosir)`;
                         }
 
                         return (
                           <TableRow key={item.id} className="text-sm">
                             <TableCell className="py-3">
                               <div className="font-medium">{item.product?.name || "Produk tidak diketahui"}</div>
-                              <div className="text-[10px] text-muted-foreground mt-0.5">
-                                {item.product?.barcode || "-"}
+                              <div className="text-[10px] text-muted-foreground mt-0.5 uppercase">
+                                {item.unitType === "CARTON" ? "Retur Karton" : item.unitType === "GROSIR" ? "Retur Grosir" : "Retur Eceran"}
                               </div>
                             </TableCell>
                             <TableCell className="text-right py-3">
-                              <Badge variant="secondary" className="font-mono">
+                              <Badge variant="secondary" className={cn(
+                                "font-mono",
+                                item.unitType === "GROSIR" && "bg-green-50 text-green-700 border-green-100"
+                              )}>
                                 {qtyDisplay}
                               </Badge>
-                              {supportsCarton && (
+                              {item.unitType === "CARTON" && supportsCarton && (
                                 <div className="text-[10px] text-muted-foreground mt-1">
                                   (Total {item.quantity} Pcs)
                                 </div>
@@ -509,7 +514,7 @@ function NewReturnDialog() {
   const createReturn = useCreateReturn();
   const { toast } = useToast();
   
-  const [selectedItems, setSelectedItems] = useState<Record<number, { qty: number; unit: "PCS" | "CARTON" }>>({});
+  const [selectedItems, setSelectedItems] = useState<Record<number, { qty: number; unit: "PCS" | "CARTON" | "GROSIR" }>>({});
   const [reason, setReason] = useState("");
 
   const handleSubmit = async () => {
@@ -525,18 +530,13 @@ function NewReturnDialog() {
     const itemsToReturn = Object.entries(selectedItems)
       .filter(([_, val]) => val.qty > 0)
       .map(([saleItemId, val]) => {
-        // Find the original item using the saleItemId (key of selectedItems)
-        // We use saleItemId as the key now to handle duplicate products in same sale properly
         const item = sale.items.find((i: any) => i.id === Number(saleItemId));
         if (!item) return null;
-
-        const pcsPerCarton = Number(item?.product?.pcsPerCarton ?? 1);
-        const finalQty = val.unit === "CARTON" ? val.qty * pcsPerCarton : val.qty;
         
-        // Return with productId as required by API, but logic based on unique sale item ID
-        return { productId: item.productId, quantity: finalQty };
+        // Send original selected quantity and unit type
+        return { productId: item.productId, quantity: val.qty, unitType: val.unit };
       })
-      .filter(Boolean); // Remove nulls
+      .filter(Boolean);
 
     if (itemsToReturn.length === 0) {
       toast({ title: "Gagal", description: "Terjadi kesalahan memproses item.", variant: "destructive" });
@@ -702,13 +702,19 @@ function NewReturnDialog() {
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">
                             <div>{item.product.name}</div>
-                            <div className="text-[10px] text-muted-foreground uppercase">{item.unitType === "CARTON" ? "Penjualan Karton" : "Penjualan Eceran"}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase">
+                              {item.unitType === "CARTON" ? "Penjualan Karton" : item.unitType === "GROSIR" ? "Penjualan Grosir" : "Penjualan Eceran"}
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">
                             {item.unitType === "CARTON" ? (
                               <div>
                                 <Badge variant="secondary" className="font-normal">{item.quantity} Karton</Badge>
                                 <div className="text-[10px] text-muted-foreground mt-1">({soldPcs} Pcs)</div>
+                              </div>
+                            ) : item.unitType === "GROSIR" ? (
+                              <div>
+                                <Badge variant="secondary" className="font-normal bg-green-50 text-green-700 border-green-100">{soldPcs} Pcs (Grosir)</Badge>
                               </div>
                             ) : (
                               <Badge variant="secondary" className="font-normal">{soldPcs} Pcs</Badge>
@@ -718,10 +724,10 @@ function NewReturnDialog() {
                             {formatCurrency(Number(item.priceAtSale) / (item.unitType === "CARTON" ? (item.conversionQty / item.quantity) : 1))}
                           </TableCell>
                           <TableCell>
-                            {supportsCarton ? (
+                            {supportsCarton || item.unitType === "GROSIR" ? (
                               <Select 
                                 value={current.unit} 
-                                onValueChange={(val: "PCS" | "CARTON") => {
+                                onValueChange={(val: "PCS" | "CARTON" | "GROSIR") => {
                                   setSelectedItems(prev => ({
                                     ...prev,
                                     [item.id]: { qty: 0, unit: val }
@@ -733,7 +739,8 @@ function NewReturnDialog() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="PCS">Pcs</SelectItem>
-                                  <SelectItem value="CARTON">Karton</SelectItem>
+                                  {supportsCarton && <SelectItem value="CARTON">Karton</SelectItem>}
+                                  {item.unitType === "GROSIR" && <SelectItem value="GROSIR">Grosir</SelectItem>}
                                 </SelectContent>
                               </Select>
                             ) : (

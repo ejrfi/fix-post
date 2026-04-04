@@ -47,13 +47,27 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function printReceiptFromSale(sale: any) {
-  const items = (sale.items ?? []).map((i: any) => ({
-    name: i.product?.name ?? "-",
-    quantity: Number(i.conversionQty ?? 0) > 0 ? Number(i.conversionQty) : Number(i.quantity ?? 0),
-    unitType: Number(i.conversionQty ?? 0) > 0 ? "PCS" : String(i.unitType ?? "PCS"),
-    unitPrice: Number(i.priceAtSale ?? 0),
-    lineTotal: Number(i.subtotal ?? 0),
-  }));
+  const items = (sale.items ?? []).map((i: any) => {
+    const isCarton = i.unitType === "CARTON";
+    const isWholesale = i.unitType === "GROSIR";
+    const pcsPerCarton = Number(i.conversionQty ?? 0) > 0 && isCarton ? Number(i.conversionQty) / Number(i.quantity) : 1;
+    
+    let displayQty = `${i.quantity} ${i.unitType}`;
+    if (isCarton) {
+      displayQty = `${i.quantity} KRT (= ${i.conversionQty} PCS)`;
+    } else if (isWholesale) {
+      displayQty = `${i.quantity} PCS (Grosir)`;
+    }
+
+    return {
+      name: i.product?.name ?? "-",
+      quantity: i.quantity,
+      unitType: i.unitType,
+      displayQty,
+      unitPrice: Number(i.priceAtSale ?? 0),
+      lineTotal: Number(i.subtotal ?? 0),
+    };
+  });
 
   const win = window.open("", "print", "height=600,width=420");
   if (!win) return;
@@ -526,16 +540,30 @@ export default function Transactions() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right py-3">
-                              {isCarton ? (
-                                <div>
-                                  <Badge variant="secondary" className="font-bold">{item.quantity} Karton</Badge>
-                                  <div className="text-[10px] text-muted-foreground mt-1">
-                                    Setara {item.conversionQty} Pcs
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="font-medium">{item.quantity} Pcs</span>
-                              )}
+                              {(() => {
+                                const isCarton = item.unitType === "CARTON";
+                                const isWholesale = item.unitType === "GROSIR";
+                                
+                                if (isCarton) {
+                                  return (
+                                    <div className="flex flex-col items-end">
+                                      <Badge variant="secondary" className="font-bold bg-blue-50 text-blue-700 border-blue-100">
+                                        {item.quantity} KRT
+                                      </Badge>
+                                      <div className="text-[9px] text-muted-foreground mt-0.5">
+                                        Tot: {item.conversionQty} PCS
+                                      </div>
+                                    </div>
+                                  );
+                                } else if (isWholesale) {
+                                  return (
+                                    <Badge variant="secondary" className="font-bold bg-green-50 text-green-700 border-green-100">
+                                      {item.quantity} PCS (Grosir)
+                                    </Badge>
+                                  );
+                                }
+                                return <span className="font-medium">{item.quantity} PCS</span>;
+                              })()}
                             </TableCell>
                             <TableCell className="text-right py-3">
                               {formatCurrency(Number(item.priceAtSale ?? 0))}
@@ -649,12 +677,12 @@ export default function Transactions() {
   );
 }
 
-function RefundDialog({ sale, disabled, onRefund }: { sale: any; disabled?: boolean; onRefund: (payload: { saleId: number; items: { productId: number; quantity: number }[]; reason: string; refundMethod?: string }) => Promise<void> }) {
+function RefundDialog({ sale, disabled, onRefund }: { sale: any; disabled?: boolean; onRefund: (payload: { saleId: number; items: { productId: number; quantity: number; unitType?: string }[]; reason: string; refundMethod?: string }) => Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [refundMethod, setRefundMethod] = useState("cash");
   // Store quantity and unit for each product
-  const [selected, setSelected] = useState<Record<number, { qty: number; unit: "PCS" | "CARTON" }>>({});
+  const [selected, setSelected] = useState<Record<number, { qty: number; unit: "PCS" | "CARTON" | "GROSIR" }>>({});
 
   const returnedByProduct = useMemo(() => {
     const map = new Map<number, number>();
@@ -735,7 +763,7 @@ function RefundDialog({ sale, disabled, onRefund }: { sale: any; disabled?: bool
                       <TableCell>
                         <div className="font-medium">{it.product?.name || "-"}</div>
                         <div className="text-xs text-muted-foreground mt-0.5">
-                          {it.unitType === "CARTON" ? "Dijual per Karton" : "Dijual per Pcs"}
+                          {it.unitType === "CARTON" ? "Dijual per Karton" : it.unitType === "GROSIR" ? "Dijual per Grosir" : "Dijual per Pcs"}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -744,6 +772,10 @@ function RefundDialog({ sale, disabled, onRefund }: { sale: any; disabled?: bool
                             <span className="font-bold">{it.quantity}</span> Karton
                             <div className="text-[10px] text-muted-foreground">({soldPcs} Pcs)</div>
                           </div>
+                        ) : it.unitType === "GROSIR" ? (
+                          <div>
+                            <span className="font-bold">{it.quantity}</span> Pcs (Grosir)
+                          </div>
                         ) : (
                           `${soldPcs} Pcs`
                         )}
@@ -751,10 +783,10 @@ function RefundDialog({ sale, disabled, onRefund }: { sale: any; disabled?: bool
                       <TableCell className="text-right text-muted-foreground">{returned > 0 ? `${returned} Pcs` : "-"}</TableCell>
                       <TableCell className="text-right font-mono">{availablePcs}</TableCell>
                       <TableCell>
-                        {supportsCarton ? (
+                        {supportsCarton || it.unitType === "GROSIR" ? (
                           <Select 
                             value={current.unit} 
-                            onValueChange={(val: "PCS" | "CARTON") => {
+                            onValueChange={(val: "PCS" | "CARTON" | "GROSIR") => {
                               setSelected(prev => ({
                                 ...prev,
                                 [Number(it.productId)]: { qty: 0, unit: val } // Reset qty on unit change
@@ -766,7 +798,8 @@ function RefundDialog({ sale, disabled, onRefund }: { sale: any; disabled?: bool
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="PCS">Pcs</SelectItem>
-                              <SelectItem value="CARTON">Karton</SelectItem>
+                              {supportsCarton && <SelectItem value="CARTON">Karton</SelectItem>}
+                              {it.unitType === "GROSIR" && <SelectItem value="GROSIR">Grosir</SelectItem>}
                             </SelectContent>
                           </Select>
                         ) : (
@@ -816,7 +849,7 @@ function RefundDialog({ sale, disabled, onRefund }: { sale: any; disabled?: bool
                     const pcsPerCarton = Number(item?.product?.pcsPerCarton ?? 1);
                     // Convert to PCS for backend
                     const finalQty = val.unit === "CARTON" ? val.qty * pcsPerCarton : val.qty;
-                    return { productId: pid, quantity: finalQty };
+                    return { productId: pid, quantity: finalQty, unitType: val.unit };
                   })
                   .filter(i => i.quantity > 0);
 

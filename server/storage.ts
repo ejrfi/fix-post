@@ -1993,6 +1993,7 @@ export class DatabaseStorage implements IStorage {
             returnId: returnItems.returnId,
             productId: returnItems.productId,
             quantity: returnItems.quantity,
+            unitType: returnItems.unitType,
             subtotal: (returnItems as any).subtotal,
             refundAmount: returnItems.refundAmount,
             product: products,
@@ -2010,6 +2011,7 @@ export class DatabaseStorage implements IStorage {
         returnId: r.returnId,
         productId: r.productId,
         quantity: r.quantity,
+        unitType: r.unitType,
         subtotal: Number(r.subtotal ?? 0),
         refundAmount: Number(r.refundAmount ?? 0),
         product: r.product,
@@ -2226,7 +2228,7 @@ export class DatabaseStorage implements IStorage {
 
   async createReturn(
     saleId: number,
-    itemsToReturn: { productId: number; quantity: number }[],
+    itemsToReturn: { productId: number; quantity: number; unitType?: string }[],
     reason: string,
     refundMethod: string,
     actor: { id: number; role: string },
@@ -2271,32 +2273,45 @@ export class DatabaseStorage implements IStorage {
         alreadyReturnedByProduct.set(Number(r.productId), Number(r.returnedQty ?? 0));
       }
 
-      const prepared: Array<{ productId: number; quantity: number; subtotal: number }> = [];
+      const prepared: Array<{ productId: number; quantity: number; unitType: string; conversionQty: number; subtotal: number }> = [];
       let returnedSubtotal = 0;
 
       for (const item of itemsToReturn) {
-        const qty = Math.max(0, Math.floor(Number(item.quantity ?? 0)));
+        const qty = Number(item.quantity ?? 0);
         if (qty <= 0) continue;
 
+        const unitType = item.unitType || "PCS";
+        const [product] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
+        if (!product) throw new BusinessError(404, "NOT_FOUND", `Produk ${item.productId} tidak ditemukan`);
+
+        const pcsPerCarton = Math.max(1, Number(product.pcsPerCarton ?? 1));
+        const conversionQty = unitType === "CARTON" ? qty * pcsPerCarton : qty;
+
         const sold = soldByProduct.get(Number(item.productId));
-        if (!sold) throw new BusinessError(400, "VALIDATION_ERROR", `Produk ${item.productId} tidak ada di transaksi`);
+        if (sold == null) throw new BusinessError(400, "VALIDATION_ERROR", `Produk ${product.name} tidak ada di transaksi`);
 
         const alreadyReturned = alreadyReturnedByProduct.get(Number(item.productId)) ?? 0;
         const remaining = Math.max(0, sold.soldPcs - alreadyReturned);
-        if (qty > remaining) {
-          throw new BusinessError(400, "RETURN_QTY_EXCEEDS", "Qty retur melebihi qty beli", {
+        if (conversionQty > remaining) {
+          throw new BusinessError(400, "RETURN_QTY_EXCEEDS", `Qty retur ${product.name} melebihi qty beli`, {
             productId: item.productId,
             soldQty: sold.soldPcs,
             alreadyReturned,
-            requested: qty,
+            requestedPcs: conversionQty,
           });
         }
 
         const unitSubtotal = sold.soldPcs > 0 ? sold.subtotal / sold.soldPcs : 0;
-        const lineSubtotal = roundMoney(unitSubtotal * qty);
+        const lineSubtotal = roundMoney(unitSubtotal * conversionQty);
         returnedSubtotal += lineSubtotal;
 
-        prepared.push({ productId: Number(item.productId), quantity: qty, subtotal: lineSubtotal });
+        prepared.push({ 
+          productId: Number(item.productId), 
+          quantity: qty, 
+          unitType,
+          conversionQty,
+          subtotal: lineSubtotal,
+        });
       }
 
       if (!prepared.length) throw new BusinessError(400, "VALIDATION_ERROR", "Tidak ada item retur valid");
@@ -2316,7 +2331,7 @@ export class DatabaseStorage implements IStorage {
 
       for (const it of prepared) {
         await tx.update(products)
-          .set({ stock: sql`${products.stock} + ${it.quantity}` })
+          .set({ stock: sql`${products.stock} + ${it.conversionQty}` })
           .where(eq(products.id, it.productId));
       }
 
@@ -2443,6 +2458,8 @@ export class DatabaseStorage implements IStorage {
           returnId: retId,
           productId: it.productId,
           quantity: it.quantity,
+          unitType: it.unitType,
+          conversionQty: it.conversionQty,
           subtotal: String(it.subtotal),
           refundAmount: String(Math.max(0, itemRefund)),
         } as any);
@@ -2555,6 +2572,7 @@ export class DatabaseStorage implements IStorage {
           returnId: returnItems.returnId,
           productId: returnItems.productId,
           quantity: returnItems.quantity,
+          unitType: returnItems.unitType,
           subtotal: (returnItems as any).subtotal,
           refundAmount: returnItems.refundAmount,
           product: products,
@@ -2572,6 +2590,7 @@ export class DatabaseStorage implements IStorage {
         returnId: it.returnId,
         productId: it.productId,
         quantity: Number(it.quantity ?? 0),
+        unitType: it.unitType,
         subtotal: Number(it.subtotal ?? 0),
         refundAmount: Number(it.refundAmount ?? 0),
         product: it.product,

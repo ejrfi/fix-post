@@ -26,7 +26,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ScanBarcode, Trash2, CreditCard, Banknote, User, Minus, Plus, Loader2, Receipt, ShoppingCart, CheckCircle2, Printer, XCircle, LayoutGrid, List, Pause, History, SlidersHorizontal, RefreshCcw, ArrowDownAZ, ArrowUpDown, TrendingUp, PlusCircle, Power, Monitor, FileText, AlertCircle, ReceiptText } from "lucide-react";
+import { Search, ScanBarcode, Trash2, CreditCard, Banknote, User, Minus, Plus, Loader2, Receipt, ShoppingCart, CheckCircle2, Printer, XCircle, LayoutGrid, List, Pause, History, SlidersHorizontal, RefreshCcw, ArrowDownAZ, ArrowUpDown, TrendingUp, TrendingDown, PlusCircle, Power, Monitor, FileText, AlertCircle, ReceiptText, Wallet } from "lucide-react";
 import { digitsToNumber, formatCurrency, getImageUrl, cn } from "@/lib/utils";
 import { useToast, toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -280,22 +280,25 @@ export default function POS() {
     let subtotalBeforeDiscount = 0;
     let discountTotal = 0;
     for (const item of items) {
-      const canCarton = Boolean(item.supportsCarton) && Number(item.pcsPerCarton) > 1 && item.cartonPrice != null;
+      const pcsPerCarton = Math.max(1, Number(item.pcsPerCarton ?? 1));
+      const canCarton = Boolean(item.supportsCarton) && pcsPerCarton > 1 && item.cartonPrice != null;
       const canWholesale = Number((item as any).wholesaleQty ?? 0) > 0 && Number((item as any).wholesalePrice ?? 0) > 0;
-      const unitType = (item as any).unitType;
+      const unitType = (item as any).unitType || "PCS";
       
       let unitPrice = Number(item.price);
+      let conversionQty = item.quantity;
+
       if (unitType === "CARTON" && canCarton) {
         unitPrice = Number(item.cartonPrice);
+        conversionQty = item.quantity * pcsPerCarton;
       } else if (unitType === "GROSIR" && canWholesale) {
         unitPrice = Number((item as any).wholesalePrice);
       } else if (unitType === "PCS") {
-        // No automatic wholesale price application here, it's now a manual selection
+        // Optional: Auto-switch to wholesale price if quantity meets threshold
+        // But the user wanted manual selection, so we just provide a hint in UI
       }
       
-      // Recalculate discount based on current cart item state (quantity/price might affect rules)
       const discountPerUnit = calculateBestDiscount(item, unitPrice, item.quantity);
-      
       const lineTotal = unitPrice * item.quantity;
       const lineDiscount = discountPerUnit * item.quantity;
       
@@ -1069,9 +1072,12 @@ export default function POS() {
         <ScrollArea className="flex-1 p-6">
           <div className="space-y-4">
             {items.map((item) => {
-              const canCarton = Boolean(item.supportsCarton) && Number(item.pcsPerCarton) > 1 && item.cartonPrice != null;
+              const pcsPerCarton = Math.max(1, Number(item.pcsPerCarton ?? 1));
+              const canCarton = Boolean(item.supportsCarton) && pcsPerCarton > 1 && item.cartonPrice != null;
               const canWholesale = Number((item as any).wholesaleQty ?? 0) > 0 && Number((item as any).wholesalePrice ?? 0) > 0;
               const unitType = (item as any).unitType;
+              const wholesaleQty = Number((item as any).wholesaleQty ?? 0);
+              const isEligibleForWholesale = unitType === "PCS" && canWholesale && item.quantity >= wholesaleQty;
               
               let displayPrice = Number(item.price);
               if (unitType === "CARTON" && canCarton) {
@@ -1093,12 +1099,31 @@ export default function POS() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-slate-700 truncate text-sm sm:text-base">{item.name}</div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">{formatCurrency(displayPrice)}</div>
-                      {unitType === "GROSIR" && (
-                        <Badge className="mt-1 bg-green-50 text-green-700 border-green-100 font-bold text-[9px] sm:text-[10px] uppercase tracking-wider whitespace-nowrap">
-                          HARGA GROSIR
-                        </Badge>
-                      )}
+                      <div className="flex flex-col">
+                        <div className="text-xs sm:text-sm text-muted-foreground">{formatCurrency(displayPrice)}</div>
+                        {unitType === "CARTON" && canCarton && (
+                          <div className="text-[10px] text-blue-600 font-medium">
+                            Setara {item.quantity * pcsPerCarton} PCS
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {unitType === "GROSIR" && (
+                          <Badge className="bg-green-50 text-green-700 border-green-100 font-bold text-[9px] sm:text-[10px] uppercase tracking-wider">
+                            HARGA GROSIR
+                          </Badge>
+                        )}
+                        {isEligibleForWholesale && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-5 px-1.5 text-[8px] sm:text-[9px] font-black uppercase bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                            onClick={() => updateUnitType(item.id, "GROSIR")}
+                          >
+                            <TrendingDown className="w-2.5 h-2.5 mr-1" /> Pakai Grosir?
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1571,127 +1596,247 @@ export default function POS() {
 
       {/* Open Shift Dialog */}
       <Dialog open={openShiftOpen} onOpenChange={setOpenShiftOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+          <div className="sr-only">
             <DialogTitle>Buka Shift Baru</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="terminalName">Nama Terminal / Device</Label>
-              <Input
-                id="terminalName"
-                value={terminalName}
-                onChange={(e) => setTerminalName(e.target.value)}
-                placeholder="Contoh: Kasir-01"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="openingCash">Kas Awal</Label>
-              <MoneyInput
-                id="openingCash"
-                value={openingCashDigits}
-                onValueChange={setOpeningCashDigits}
-                placeholder="0"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="openingNote">Catatan (opsional)</Label>
-              <Input
-                id="openingNote"
-                value={openingNote}
-                onChange={(e) => setOpeningNote(e.target.value)}
-                placeholder="Contoh: Kas awal dari brankas"
-              />
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Shift akan dibuka oleh <span className="font-semibold">{user?.fullName || user?.username}</span> pada <span className="font-semibold">{format(openShiftNow, "dd MMM yyyy, HH:mm")}</span>
+            <DialogDescription>Masukkan detail kas awal untuk mulai transaksi hari ini.</DialogDescription>
+          </div>
+          
+          <div className="relative bg-amber-500 overflow-hidden p-8 text-center">
+            <div className="absolute inset-0 bg-white/10 opacity-20" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-amber-400 rounded-full blur-3xl opacity-50 animate-pulse" />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-xl mb-4">
+                <LayoutGrid className="w-10 h-10 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Buka Shift Baru</h2>
+              <p className="text-amber-100 font-medium">Siapkan laci kas Anda untuk hari ini</p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenShiftOpen(false)}>Batal</Button>
-            <Button onClick={handleOpenShift} disabled={isOpeningShift}>
-              {isOpeningShift && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Buka Shift
-            </Button>
-          </DialogFooter>
+
+          <div className="p-8 bg-white space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="terminalName" className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nama Terminal / Device</Label>
+                <div className="relative">
+                  <Monitor className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="terminalName"
+                    value={terminalName}
+                    onChange={(e) => setTerminalName(e.target.value)}
+                    placeholder="Contoh: Kasir-01"
+                    className="h-12 pl-10 rounded-xl border-2 focus-visible:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="openingCash" className="text-xs font-bold text-slate-400 uppercase tracking-widest">Kas Awal (Modal)</Label>
+                <div className="relative">
+                  <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <MoneyInput
+                    id="openingCash"
+                    valueDigits={openingCashDigits}
+                    onValueDigitsChange={setOpeningCashDigits}
+                    placeholder="0"
+                    className="h-12 pl-10 rounded-xl border-2 focus-visible:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="openingNote" className="text-xs font-bold text-slate-400 uppercase tracking-widest">Catatan Opsional</Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                  <textarea
+                    id="openingNote"
+                    value={openingNote}
+                    onChange={(e) => setOpeningNote(e.target.value)}
+                    placeholder="Contoh: Kas awal dari brankas"
+                    className="min-h-[80px] w-full pl-10 pr-3 py-2 rounded-xl border-2 border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-slate-200 shrink-0">
+                <User className="w-5 h-5 text-slate-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kasir Aktif</p>
+                <p className="text-sm font-bold text-slate-700 truncate">{user?.fullName || user?.username}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Waktu</p>
+                <p className="text-sm font-bold text-slate-700">{format(openShiftNow, "HH:mm")}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button 
+                variant="outline" 
+                className="flex-1 h-14 rounded-xl border-2 font-bold transition-all"
+                onClick={() => setOpenShiftOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button 
+                className="flex-[2] h-14 rounded-xl bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-200/50 font-bold transition-all hover:scale-[1.02] active:scale-95"
+                onClick={handleOpenShift} 
+                disabled={isOpeningShift}
+              >
+                {isOpeningShift ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5 mr-2" /> Buka Shift</>}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Close Shift Dialog */}
       <Dialog open={closeShiftOpen} onOpenChange={setCloseShiftOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+          <div className="sr-only">
             <DialogTitle>Tutup Shift</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Ringkasan Shift</Label>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="text-muted-foreground">Kasir</div>
-                <div className="font-semibold text-right">{activeShiftData?.shift?.userName || "-"}</div>
-                <div className="text-muted-foreground">Terminal</div>
-                <div className="font-semibold text-right">{activeShiftData?.shift?.terminalName || "-"}</div>
-                <div className="text-muted-foreground">Dibuka pada</div>
-                <div className="font-semibold text-right">{activeShiftData?.shift?.openedAt ? format(new Date(activeShiftData.shift.openedAt as any), "dd MMM, HH:mm") : "-"}</div>
-                <div className="text-muted-foreground">Kas Awal</div>
-                <div className="font-semibold text-right">{formatCurrency(activeShiftData?.shift?.openingCash ?? 0)}</div>
-                <div className="text-muted-foreground">Penjualan Tunai</div>
-                <div className="font-semibold text-right">{formatCurrency(activeShiftData?.summary?.cashSales ?? 0)}</div>
-                <div className="text-muted-foreground">Pengembalian Tunai</div>
-                <div className="font-semibold text-red-600 text-right">-{formatCurrency(activeShiftData?.summary?.cashRefunds ?? 0)}</div>
-                <div className="text-muted-foreground">Total Transaksi</div>
-                <div className="font-semibold text-right">{activeShiftData?.summary?.totalTransactions ?? 0}</div>
-                <div className="text-muted-foreground">Total Item Terjual</div>
-                <div className="font-semibold text-right">{activeShiftData?.summary?.totalItemsSold ?? 0}</div>
-                <div className="text-muted-foreground">Total Diskon</div>
-                <div className="font-semibold text-red-600 text-right">-{formatCurrency(activeShiftData?.summary?.totalDiscount ?? 0)}</div>
-                <div className="text-muted-foreground">Total Poin Ditukar</div>
-                <div className="font-semibold text-red-600 text-right">-{formatCurrency(activeShiftData?.summary?.totalRedeemAmount ?? 0)}</div>
-                <div className="text-muted-foreground">Total Poin Didapat</div>
-                <div className="font-semibold text-right">{activeShiftData?.summary?.totalPointsEarned ?? 0}</div>
-                <div className="text-muted-foreground">Estimasi Kas Akhir</div>
-                <div className="font-bold text-right">{formatCurrency(expectedCash ?? 0)}</div>
+            <DialogDescription>Tinjau ringkasan transaksi dan masukkan saldo kas akhir.</DialogDescription>
+          </div>
+
+          <div className="relative bg-slate-900 overflow-hidden p-8 text-center">
+            <div className="absolute inset-0 bg-white/5 opacity-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-slate-700 rounded-full blur-3xl opacity-50" />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="h-20 w-20 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 mb-4">
+                <XCircle className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Tutup Shift</h2>
+              <p className="text-slate-400 font-medium">Selesaikan sesi kasir Anda</p>
+            </div>
+          </div>
+
+          <div className="p-8 bg-white space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-4">
+              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ringkasan Sesi</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kasir</p>
+                  <p className="text-sm font-bold text-slate-700 truncate">{activeShiftData?.shift?.userName || "-"}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Terminal</p>
+                  <p className="text-sm font-bold text-slate-700 truncate">{activeShiftData?.shift?.terminalName || "-"}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100 space-y-1">
+                  <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Kas Awal</p>
+                  <p className="text-sm font-bold text-blue-700 tabular-nums">{formatCurrency(activeShiftData?.shift?.openingCash ?? 0)}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 space-y-1">
+                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Penjualan Tunai</p>
+                  <p className="text-sm font-bold text-emerald-700 tabular-nums">{formatCurrency(activeShiftData?.summary?.cashSales ?? 0)}</p>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estimasi Kas di Laci</p>
+                  <p className="text-2xl font-black tabular-nums">{formatCurrency(expectedCash ?? 0)}</p>
+                </div>
+                <div className="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center">
+                  <Wallet className="w-6 h-6 text-white" />
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rincian Transaksi</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm border border-slate-100 rounded-2xl p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Total Transaksi</span>
+                    <span className="font-bold text-slate-700">{activeShiftData?.summary?.totalTransactions ?? 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Item Terjual</span>
+                    <span className="font-bold text-slate-700">{activeShiftData?.summary?.totalItemsSold ?? 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 text-red-500">Refund Tunai</span>
+                    <span className="font-bold text-red-600">-{formatCurrency(activeShiftData?.summary?.cashRefunds ?? 0)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 text-red-500">Total Diskon</span>
+                    <span className="font-bold text-red-600">-{formatCurrency(activeShiftData?.summary?.totalDiscount ?? 0)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 text-red-500">Poin Ditukar</span>
+                    <span className="font-bold text-red-600">-{formatCurrency(activeShiftData?.summary?.totalRedeemAmount ?? 0)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 text-blue-500">Poin Didapat</span>
+                    <span className="font-bold text-blue-600">+{activeShiftData?.summary?.totalPointsEarned ?? 0}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="actualCash">Kas Aktual di Laci</Label>
-              <MoneyInput
-                id="actualCash"
-                value={actualCashDigits}
-                onValueChange={setActualCashDigits}
-                placeholder={formatCurrency(expectedCash ?? 0)}
-              />
-              {cashDifferencePreview != null && (
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Selisih</span>
-                  <span className={cn(
-                    cashDifferencePreview !== 0 && "font-bold",
-                    cashDifferencePreview < 0 && "text-red-600",
-                    cashDifferencePreview > 0 && "text-green-600",
-                  )}>{formatCurrency(cashDifferencePreview)}</span>
+            <div className="space-y-4 pt-2 border-t border-slate-100">
+              <div className="space-y-2">
+                <Label htmlFor="actualCash" className="text-xs font-bold text-slate-400 uppercase tracking-widest">Kas Aktual di Laci</Label>
+                <div className="relative">
+                  <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <MoneyInput
+                    id="actualCash"
+                    valueDigits={actualCashDigits}
+                    onValueDigitsChange={setActualCashDigits}
+                    placeholder={formatCurrency(expectedCash ?? 0)}
+                    className="h-14 pl-10 rounded-xl border-2 text-lg font-bold focus-visible:ring-slate-900"
+                  />
+                </div>
+                {cashDifferencePreview != null && (
+                  <div className={cn(
+                    "flex items-center justify-between p-3 rounded-xl text-sm font-bold animate-in fade-in slide-in-from-top-1",
+                    cashDifferencePreview === 0 ? "bg-slate-50 text-slate-600" : 
+                    cashDifferencePreview < 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
+                  )}>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{cashDifferencePreview === 0 ? "Saldo Sesuai" : cashDifferencePreview < 0 ? "Kurang (Minus)" : "Lebih (Surplus)"}</span>
+                    </div>
+                    <span className="tabular-nums">{formatCurrency(cashDifferencePreview)}</span>
+                  </div>
+                )}
+              </div>
+
+              {cashDifferencePreview != null && Math.abs(Number(cashDifferencePreview)) >= 0.01 && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                  <Label htmlFor="closeNote" className="text-xs font-bold text-slate-400 uppercase tracking-widest text-red-600">Alasan Selisih (Wajib)</Label>
+                  <textarea
+                    id="closeNote"
+                    value={closeNote}
+                    onChange={(e) => setCloseNote(e.target.value)}
+                    placeholder="Contoh: Salah kembalian atau pengeluaran tidak tercatat"
+                    className="min-h-[80px] w-full px-3 py-2 rounded-xl border-2 border-red-200 bg-red-50/30 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition-all"
+                  />
                 </div>
               )}
             </div>
-            {cashDifferencePreview != null && Math.abs(Number(cashDifferencePreview)) >= 0.01 && (
-              <div className="space-y-2">
-                <Label htmlFor="closeNote">Catatan (wajib jika ada selisih)</Label>
-                <Input
-                  id="closeNote"
-                  value={closeNote}
-                  onChange={(e) => setCloseNote(e.target.value)}
-                  placeholder="Contoh: Ada kembalian lebih"
-                />
-              </div>
-            )}
+
+            <div className="flex gap-3 pt-4">
+              <Button 
+                variant="outline" 
+                className="flex-1 h-14 rounded-xl border-2 font-bold transition-all"
+                onClick={() => setCloseShiftOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button 
+                className="flex-[2] h-14 rounded-xl bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-200 font-bold transition-all hover:scale-[1.02] active:scale-95"
+                onClick={handleCloseShift} 
+                disabled={isClosingShift}
+              >
+                {isClosingShift ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Power className="w-5 h-5 mr-2" /> Tutup Shift Sekarang</>}
+              </Button>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCloseShiftOpen(false)}>Batal</Button>
-            <Button onClick={handleCloseShift} disabled={isClosingShift}>
-              {isClosingShift && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Tutup Shift
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

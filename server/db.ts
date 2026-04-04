@@ -186,6 +186,8 @@ export async function ensureReturnsEnhancementsSchema() {
   await ensureColumn("returns", "status", "`status` VARCHAR(20) NOT NULL DEFAULT 'COMPLETED'");
   await ensureColumn("returns", "created_at", "`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
   await ensureColumn("return_items", "subtotal", "`subtotal` DECIMAL(12,2) NOT NULL DEFAULT 0");
+  await ensureColumn("return_items", "unit_type", "`unit_type` VARCHAR(20) NOT NULL DEFAULT 'PCS'");
+  await ensureColumn("return_items", "conversion_qty", "`conversion_qty` INT NOT NULL DEFAULT 0");
   try {
     await poolConnection.query(`CREATE INDEX idx_returns_sale_status ON returns (sale_id, status)`);
   } catch {

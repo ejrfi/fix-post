@@ -53,42 +53,40 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-slate-50 text-slate-900 relative overflow-hidden font-sans selection:bg-indigo-500/20">
+    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white text-slate-900 relative overflow-hidden font-sans selection:bg-primary/10">
       
-      {/* LEFT COLUMN: Login Form */}
-      <div className="flex flex-col items-center justify-center p-8 lg:p-16 relative bg-[#f8fafc] z-20">
-        <div className="w-full max-w-md bg-white p-12 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] border border-slate-100 relative overflow-hidden transition-all duration-500 hover:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.12)]">
+      {/* LEFT COLUMN: Login Form - Very Minimalist & Clean */}
+      <div className="flex flex-col items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-white z-20 order-2 lg:order-1">
+        <div className="w-full max-w-[400px] space-y-10">
           
-          <div className="space-y-8 relative z-10">
-            <div className="text-center space-y-3">
-              <div className="mb-6 mx-auto animate-in zoom-in duration-500">
-                <img src="/logo-.svg" alt="Logo" className="h-20 w-auto mx-auto drop-shadow-lg" />
-              </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900">Selamat Datang</h1>
-              <p className="text-slate-500 font-medium">Masuk untuk mengelola sistem operasional.</p>
+          <div className="space-y-6">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <img src="/logo-.svg" alt="Logo" className="h-16 w-auto mb-8 grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer" />
+              <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">Login.</h1>
+              <p className="text-slate-500 font-medium text-lg">Kelola operasional bisnis Anda dengan lebih efisien.</p>
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
                 <FormField
                   control={form.control}
                   name="username"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Username</FormLabel>
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Username</FormLabel>
                       <FormControl>
                         <div className="relative group">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <User className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors duration-300" />
+                            <User className="h-4.5 w-4.5 text-slate-300 group-focus-within:text-slate-900 transition-colors duration-300" />
                           </div>
                           <Input 
-                            className="pl-12 h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 font-medium" 
-                            placeholder="Username / ID Karyawan"
+                            className="pl-11 h-12 bg-slate-50 border-slate-100 text-slate-900 placeholder:text-slate-300 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-0 transition-all duration-300 font-medium" 
+                            placeholder="Username Anda"
                             {...field} 
                           />
                         </div>
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-[10px]" />
                     </FormItem>
                   )}
                 />
@@ -97,53 +95,50 @@ export default function Login() {
                   control={form.control}
                   name="password"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
+                    <FormItem className="space-y-1.5">
                       <div className="flex justify-between items-center ml-1">
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</FormLabel>
-                        <a href="#" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">Lupa password?</a>
+                        <FormLabel className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Password</FormLabel>
+                        <a href="#" className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-wider">Lupa?</a>
                       </div>
                       <FormControl>
                         <div className="relative group">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors duration-300" />
+                            <Lock className="h-4.5 w-4.5 text-slate-300 group-focus-within:text-slate-900 transition-colors duration-300" />
                           </div>
                           <Input 
                             type={showPassword ? "text" : "password"} 
-                            className="pl-12 pr-12 h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 font-medium" 
+                            className="pl-11 pr-11 h-12 bg-slate-50 border-slate-100 text-slate-900 placeholder:text-slate-300 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-0 transition-all duration-300 font-medium" 
                             placeholder="Kata Sandi"
                             {...field} 
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none"
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-slate-900 transition-colors focus:outline-none"
                           >
                             {showPassword ? (
-                              <EyeOff className="w-5 h-5" />
+                              <EyeOff className="w-4 h-4" />
                             ) : (
-                              <Eye className="w-5 h-5" />
+                              <Eye className="w-4 h-4" />
                             )}
                           </button>
                         </div>
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-[10px]" />
                     </FormItem>
                   )}
                 />
 
                 <Button 
                   type="submit" 
-                  className="w-full h-14 text-base font-bold tracking-wide rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/20 hover:shadow-slate-900/30 hover:-translate-y-0.5 transition-all duration-300 group mt-4" 
+                  className="w-full h-12 text-sm font-black tracking-widest uppercase rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-200 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group mt-6" 
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 
-                      Memproses...
-                    </>
+                    <Loader2 className="h-4 w-4 animate-spin" /> 
                   ) : (
                     <span className="flex items-center justify-center gap-2">
-                      Masuk Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      Lanjutkan <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </span>
                   )}
                 </Button>
@@ -151,59 +146,62 @@ export default function Login() {
             </Form>
           </div>
           
-          <div className="mt-10 pt-6 border-t border-slate-100 text-center">
-            <p className="text-xs text-slate-400 font-medium">
-              &copy; {new Date().getFullYear()} G-Jarfy. <span className="text-emerald-600 font-semibold inline-flex items-center gap-1 ml-1"><ShieldCheck className="w-3 h-3" /> Secure</span>
+          <div className="pt-10 animate-in fade-in duration-1000 delay-500">
+            <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+              <span className="w-8 h-[1px] bg-slate-100" />
+              &copy; {new Date().getFullYear()} G-Jarfy POS
             </p>
           </div>
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Branding & Visuals */}
-      <div className="hidden lg:flex flex-col items-center justify-center p-12 relative bg-gradient-to-br from-teal-400 to-cyan-300 overflow-hidden">
-        {/* Animated Background Layers */}
+      {/* RIGHT COLUMN: Modern Branding - Soft, Professional, Minimalist */}
+      <div className="hidden lg:flex flex-col items-center justify-center p-12 relative bg-[#f8fafc] overflow-hidden order-1 lg:order-2">
+        {/* Subtle Background Elements */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-white/20 rounded-full blur-[120px] animate-pulse" 
-               style={{ transform: `translate(${mousePosition.x * -0.02}px, ${mousePosition.y * -0.02}px)` }} />
-          <div className="absolute bottom-[-20%] left-[-20%] w-[60vw] h-[60vw] bg-teal-500/20 rounded-full blur-[120px]" 
-               style={{ transform: `translate(${mousePosition.x * 0.03}px, ${mousePosition.y * 0.03}px)` }} />
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-overlay" />
+          <div className="absolute top-[10%] left-[10%] w-[40vw] h-[40vw] bg-slate-200/30 rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute bottom-[10%] right-[10%] w-[30vw] h-[30vw] bg-indigo-50/50 rounded-full blur-[100px]" />
         </div>
 
-        {/* Floating White Card */}
-        <div className="relative z-10 w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-[3rem] shadow-2xl shadow-teal-900/10 p-12 text-center border border-white/50 animate-in zoom-in duration-700">
-          
-          <div className="mb-10 relative">
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-teal-100 rounded-full blur-3xl opacity-50 -z-10" />
-             <img src="/logo-.svg" alt="Logo" className="h-48 w-auto mx-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
+        <div className="relative z-10 w-full max-w-lg text-center space-y-12 animate-in zoom-in-95 duration-1000">
+          <div className="relative inline-block">
+             <div className="absolute -inset-4 bg-white/40 rounded-full blur-2xl -z-10" />
+             <img 
+               src="/logo-.svg" 
+               alt="Logo" 
+               className="h-40 w-auto mx-auto drop-shadow-sm opacity-90 hover:opacity-100 transition-opacity duration-500" 
+             />
           </div>
 
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 border border-teal-100 text-teal-700 shadow-sm">
-              <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold tracking-widest uppercase">Enterprise Ready</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-100 text-slate-400 shadow-sm">
+              <span className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+              <span className="text-[9px] font-black tracking-[0.2em] uppercase">Enterprise Management</span>
             </div>
             
-            <h2 className="text-4xl font-black tracking-tight leading-[1.1] text-slate-900">
-              Transformasi Bisnis <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-500">
-                Menjadi Lebih Cerdas
-              </span>
+            <h2 className="text-5xl font-black tracking-tighter leading-none text-slate-900">
+              Modern.<br />
+              Sederhana.<br />
+              <span className="text-slate-300">Terintegrasi.</span>
             </h2>
             
-            <p className="text-base text-slate-500 font-medium leading-relaxed px-4">
-              Platform manajemen ritel all-in-one yang memberdayakan bisnis Anda dengan kecepatan, akurasi, dan wawasan mendalam.
+            <p className="text-sm text-slate-400 font-medium leading-relaxed max-w-[320px] mx-auto uppercase tracking-wide">
+              Solusi POS cerdas untuk bisnis yang terus berkembang di era digital.
             </p>
 
-            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100 mt-8">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div className="text-2xl font-black text-slate-900 mb-1">99.9%</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Uptime Server</div>
-              </div>
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div className="text-2xl font-black text-slate-900 mb-1">24/7</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Support Aktif</div>
-              </div>
+            <div className="flex items-center justify-center gap-8 pt-8 opacity-50 grayscale">
+               <div className="flex flex-col items-center gap-1">
+                  <ShieldCheck className="w-5 h-5 text-slate-400" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Secure</span>
+               </div>
+               <div className="flex flex-col items-center gap-1">
+                  <Zap className="w-5 h-5 text-slate-400" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Fast</span>
+               </div>
+               <div className="flex flex-col items-center gap-1">
+                  <BarChart3 className="w-5 h-5 text-slate-400" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Insight</span>
+               </div>
             </div>
           </div>
         </div>
