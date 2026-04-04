@@ -6,9 +6,11 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, EyeOff, Lock, User, ArrowRight, Zap, ShieldCheck, BarChart3, Sparkles } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Eye, EyeOff, Lock, User, ArrowRight, ShieldCheck, Zap, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { motion } from "framer-motion";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Nama pengguna wajib diisi"),
@@ -21,20 +23,11 @@ export default function Login() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { username: "", password: "" },
   });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     setIsSubmitting(true);
@@ -53,40 +46,67 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white text-slate-900 relative overflow-hidden font-sans selection:bg-primary/10">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-slate-950 font-sans selection:bg-cyan-500/30">
       
-      {/* LEFT COLUMN: Login Form - Very Minimalist & Clean */}
-      <div className="flex flex-col items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-white z-20 order-2 lg:order-1">
-        <div className="w-full max-w-[400px] space-y-10">
-          
-          <div className="space-y-6">
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <img src="/logo-.svg" alt="Logo" className="h-16 w-auto mb-8 grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer" />
-              <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">Login.</h1>
-              <p className="text-slate-500 font-medium text-lg">Kelola operasional bisnis Anda dengan lebih efisien.</p>
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Background Gradients matching Sidebar (Cyan to Green) */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-green-500/10 rounded-full blur-[120px]" />
+        
+        {/* Repeating Logo Pattern with low transparency */}
+        <div 
+          className="absolute inset-0 opacity-[0.03] invert brightness-0"
+          style={{ 
+            backgroundImage: `url('/logo-.svg')`,
+            backgroundSize: '80px 80px',
+            backgroundRepeat: 'repeat',
+          }}
+        />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-[450px]"
+      >
+        <Card className="border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <CardContent className="p-8 sm:p-12">
+            <div className="flex flex-col items-center text-center mb-10">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-green-500/20 rounded-3xl flex items-center justify-center mb-6 border border-cyan-500/20"
+              >
+                <img src="/logo-.svg" alt="Logo" className="h-10 w-auto invert brightness-0" />
+              </motion.div>
+              <h1 className="text-3xl font-black tracking-tight text-white mb-2">Selamat Datang.</h1>
+              <p className="text-slate-400 font-medium text-sm uppercase tracking-[0.2em]">Sistem POS Terintegrasi</p>
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="username"
                   render={({ field }) => (
-                    <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Username</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Identitas Pengguna</FormLabel>
                       <FormControl>
                         <div className="relative group">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <User className="h-4.5 w-4.5 text-slate-300 group-focus-within:text-slate-900 transition-colors duration-300" />
+                            <User className="h-4 w-4 text-slate-500 group-focus-within:text-cyan-400 transition-colors duration-300" />
                           </div>
                           <Input 
-                            className="pl-11 h-12 bg-slate-50 border-slate-100 text-slate-900 placeholder:text-slate-300 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-0 transition-all duration-300 font-medium" 
-                            placeholder="Username Anda"
+                            className="pl-11 h-14 bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-2xl focus:bg-white/10 focus:border-cyan-500/50 focus:ring-0 transition-all duration-300 font-bold" 
+                            placeholder="Username"
                             {...field} 
                           />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-[10px] text-red-400" />
                     </FormItem>
                   )}
                 />
@@ -95,26 +115,26 @@ export default function Login() {
                   control={form.control}
                   name="password"
                   render={({ field }) => (
-                    <FormItem className="space-y-1.5">
+                    <FormItem className="space-y-2">
                       <div className="flex justify-between items-center ml-1">
-                        <FormLabel className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Password</FormLabel>
-                        <a href="#" className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-wider">Lupa?</a>
+                        <FormLabel className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Kata Sandi</FormLabel>
+                        <a href="#" className="text-[10px] font-black text-slate-500 hover:text-cyan-400 transition-colors uppercase tracking-widest">Lupa?</a>
                       </div>
                       <FormControl>
                         <div className="relative group">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Lock className="h-4.5 w-4.5 text-slate-300 group-focus-within:text-slate-900 transition-colors duration-300" />
+                            <Lock className="h-4 w-4 text-slate-500 group-focus-within:text-cyan-400 transition-colors duration-300" />
                           </div>
                           <Input 
                             type={showPassword ? "text" : "password"} 
-                            className="pl-11 pr-11 h-12 bg-slate-50 border-slate-100 text-slate-900 placeholder:text-slate-300 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-0 transition-all duration-300 font-medium" 
-                            placeholder="Kata Sandi"
+                            className="pl-11 pr-11 h-14 bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-2xl focus:bg-white/10 focus:border-cyan-500/50 focus:ring-0 transition-all duration-300 font-bold" 
+                            placeholder="Password"
                             {...field} 
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-slate-900 transition-colors focus:outline-none"
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors focus:outline-none"
                           >
                             {showPassword ? (
                               <EyeOff className="w-4 h-4" />
@@ -124,89 +144,44 @@ export default function Login() {
                           </button>
                         </div>
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-[10px] text-red-400" />
                     </FormItem>
                   )}
                 />
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-sm font-black tracking-widest uppercase rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-200 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group mt-6" 
+                  className="w-full h-14 text-xs font-black tracking-[0.2em] uppercase rounded-2xl bg-gradient-to-r from-cyan-500 to-green-500 hover:from-cyan-400 hover:to-green-400 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:-translate-y-0.5 transition-all duration-300 group mt-4 border-none" 
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" /> 
+                    <Loader2 className="h-5 w-5 animate-spin" /> 
                   ) : (
                     <span className="flex items-center justify-center gap-2">
-                      Lanjutkan <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      Masuk ke Sistem <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </span>
                   )}
                 </Button>
               </form>
             </Form>
-          </div>
-          
-          <div className="pt-10 animate-in fade-in duration-1000 delay-500">
-            <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
-              <span className="w-8 h-[1px] bg-slate-100" />
-              &copy; {new Date().getFullYear()} G-Jarfy POS
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {/* RIGHT COLUMN: Modern Branding - Soft, Professional, Minimalist */}
-      <div className="hidden lg:flex flex-col items-center justify-center p-12 relative bg-[#f8fafc] overflow-hidden order-1 lg:order-2">
-        {/* Subtle Background Elements */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-[10%] left-[10%] w-[40vw] h-[40vw] bg-slate-200/30 rounded-full blur-[100px] animate-pulse" />
-          <div className="absolute bottom-[10%] right-[10%] w-[30vw] h-[30vw] bg-indigo-50/50 rounded-full blur-[100px]" />
-        </div>
-
-        <div className="relative z-10 w-full max-w-lg text-center space-y-12 animate-in zoom-in-95 duration-1000">
-          <div className="relative inline-block">
-             <div className="absolute -inset-4 bg-white/40 rounded-full blur-2xl -z-10" />
-             <img 
-               src="/logo-.svg" 
-               alt="Logo" 
-               className="h-40 w-auto mx-auto drop-shadow-sm opacity-90 hover:opacity-100 transition-opacity duration-500" 
-             />
-          </div>
-
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-100 text-slate-400 shadow-sm">
-              <span className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
-              <span className="text-[9px] font-black tracking-[0.2em] uppercase">Enterprise Management</span>
+            <div className="mt-10 flex items-center justify-center gap-6 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+               <ShieldCheck className="w-5 h-5 text-white" />
+               <Zap className="w-5 h-5 text-white" />
+               <BarChart3 className="w-5 h-5 text-white" />
             </div>
-            
-            <h2 className="text-5xl font-black tracking-tighter leading-none text-slate-900">
-              Modern.<br />
-              Sederhana.<br />
-              <span className="text-slate-300">Terintegrasi.</span>
-            </h2>
-            
-            <p className="text-sm text-slate-400 font-medium leading-relaxed max-w-[320px] mx-auto uppercase tracking-wide">
-              Solusi POS cerdas untuk bisnis yang terus berkembang di era digital.
-            </p>
+          </CardContent>
+        </Card>
 
-            <div className="flex items-center justify-center gap-8 pt-8 opacity-50 grayscale">
-               <div className="flex flex-col items-center gap-1">
-                  <ShieldCheck className="w-5 h-5 text-slate-400" />
-                  <span className="text-[8px] font-black uppercase tracking-widest">Secure</span>
-               </div>
-               <div className="flex flex-col items-center gap-1">
-                  <Zap className="w-5 h-5 text-slate-400" />
-                  <span className="text-[8px] font-black uppercase tracking-widest">Fast</span>
-               </div>
-               <div className="flex flex-col items-center gap-1">
-                  <BarChart3 className="w-5 h-5 text-slate-400" />
-                  <span className="text-[8px] font-black uppercase tracking-widest">Insight</span>
-               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-8 text-[10px] text-slate-600 font-black uppercase tracking-[0.4em]"
+        >
+          &copy; {new Date().getFullYear()} G-Jarfy POS • V1.0
+        </motion.p>
+      </motion.div>
     </div>
   );
 }
