@@ -31,7 +31,8 @@ import {
   TrendingUp,
   TrendingDown,
   Image as ImageIcon,
-  MoreVertical
+  MoreVertical,
+  Save
 } from "lucide-react";
 import { cn, digitsToNumber, formatCurrency, getImageUrl } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -1509,67 +1510,86 @@ export default function Inventory() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="w-[96vw] sm:max-w-4xl p-0 border-none shadow-2xl">
-          <div className="p-6 bg-[#0f172a] text-white">
-             <DialogTitle className="text-xl font-black text-white">{editingProduct ? "Ubah Produk" : "Tambah Produk Baru"}</DialogTitle>
-             <DialogDescription className="text-slate-300 mt-1">
-               Lengkapi data produk dengan teliti untuk akurasi laporan inventori dan penjualan.
-             </DialogDescription>
-           </div>
+        <DialogContent className="w-[96vw] sm:max-w-5xl p-0 border-none shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col h-[90vh]">
+          <div className="relative bg-slate-900 overflow-hidden p-6 text-left shrink-0">
+            <div className="absolute inset-0 bg-white/5 opacity-10" />
+            <div className="absolute top-1/2 right-0 -translate-y-1/2 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl opacity-50" />
+            
+            <div className="relative z-10 flex items-center gap-5">
+              <div className="h-14 w-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
+                {editingProduct ? <Edit className="w-7 h-7 text-cyan-400" /> : <Plus className="w-7 h-7 text-green-400" />}
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black text-white tracking-tight leading-tight">{editingProduct ? "Ubah Produk" : "Tambah Produk Baru"}</DialogTitle>
+                <DialogDescription className="text-slate-400 font-medium text-xs mt-0.5">
+                  Kelola data inventori dengan standar operasional yang akurat.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
-              <div className="max-h-[70vh] overflow-y-auto p-6 bg-white">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                  {/* Left Column: Basic Info & Image */}
-                  <div className="md:col-span-7 space-y-8">
-                    <section>
-                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Info className="w-3 h-3" /> Informasi Utama
-                      </h3>
-                      <div className="grid gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0 relative">
+              <div className="flex-1 overflow-y-auto custom-scrollbar bg-white pb-32">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+                  
+                  {/* Left Column: Basic Info & Classification */}
+                  <div className="lg:col-span-7 p-8 space-y-10 border-r border-slate-100">
+                    
+                    {/* Section: Basic Info */}
+                    <section className="space-y-6">
+                      <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
+                        <div className="p-2 rounded-lg bg-cyan-50">
+                          <Info className="w-4 h-4 text-cyan-600" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Informasi Utama</h3>
+                      </div>
+                      
+                      <div className="grid gap-5">
                         <FormField
                           control={form.control}
                           name="name"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Nama Produk</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Nama Produk</FormLabel>
                               <FormControl>
-                                <Input placeholder="Contoh: Kopi Susu Gula Aren" className="h-11 rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500" {...field} />
+                                <Input placeholder="Contoh: Kopi Susu Gula Aren" className="h-12 rounded-xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-cyan-500 transition-all font-bold" {...field} />
                               </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <FormField
                             control={form.control}
                             name="barcode"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-slate-600 font-bold">Barcode / SKU</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Barcode / SKU</FormLabel>
                                 <div className="flex gap-2">
                                   <FormControl>
-                                    <Input placeholder="Scan barcode..." className="h-11 rounded-xl border-slate-200" {...field} />
+                                    <Input placeholder="Scan atau input kode..." className="h-12 rounded-xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-cyan-500 transition-all font-mono" {...field} />
                                   </FormControl>
                                   <Popover>
                                     <PopoverTrigger asChild>
-                                      <Button variant="outline" size="icon" type="button" className="h-11 w-11 rounded-xl shrink-0 border-slate-200">
+                                      <Button variant="outline" size="icon" type="button" className="h-12 w-12 rounded-xl shrink-0 border-2 border-slate-100 hover:border-cyan-500 hover:text-cyan-600 transition-all">
                                         <Wand2 className="w-4 h-4" />
                                       </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-48 p-2" align="end">
+                                    <PopoverContent className="w-48 p-2 rounded-2xl border-2 border-slate-100 shadow-xl" align="end">
                                        <div className="grid gap-1">
-                                         <Button variant="ghost" size="sm" className="justify-start h-9 rounded-lg" onClick={() => generateBarcode('random')}>
-                                           <RefreshCw className="w-3 h-3 mr-2" /> Kode Acak
+                                         <Button variant="ghost" size="sm" className="justify-start h-10 rounded-xl font-bold text-slate-600" onClick={() => generateBarcode('random')}>
+                                           <RefreshCw className="w-3.5 h-3.5 mr-2 text-cyan-500" /> Kode Acak
                                          </Button>
-                                         <Button variant="ghost" size="sm" className="justify-start h-9 rounded-lg" onClick={() => generateBarcode('loop')}>
-                                           <Repeat className="w-3 h-3 mr-2" /> Kode Berurutan
+                                         <Button variant="ghost" size="sm" className="justify-start h-10 rounded-xl font-bold text-slate-600" onClick={() => generateBarcode('loop')}>
+                                           <Repeat className="w-3.5 h-3.5 mr-2 text-green-500" /> Kode Berurutan
                                          </Button>
                                        </div>
                                     </PopoverContent>
                                   </Popover>
                                 </div>
-                                <FormMessage />
+                                <FormMessage className="text-[10px]" />
                               </FormItem>
                             )}
                           />
@@ -1577,21 +1597,21 @@ export default function Inventory() {
                             control={form.control}
                             name="status"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-slate-600 font-bold">Status</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Status Produk</FormLabel>
                                 <Select value={field.value} onValueChange={field.onChange}>
                                   <FormControl>
-                                    <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                                    <SelectTrigger className="h-12 rounded-xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-cyan-500 transition-all font-bold">
                                       <SelectValue placeholder="Pilih status" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="ACTIVE">Aktif (Dijual)</SelectItem>
-                                    <SelectItem value="INACTIVE">Nonaktif</SelectItem>
-                                    <SelectItem value="ARCHIVED">Arsip</SelectItem>
+                                  <SelectContent className="rounded-2xl border-2 border-slate-100 shadow-xl">
+                                    <SelectItem value="ACTIVE" className="rounded-xl font-bold text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700">Aktif (Dijual)</SelectItem>
+                                    <SelectItem value="INACTIVE" className="rounded-xl font-bold text-slate-500 focus:bg-slate-50">Nonaktif</SelectItem>
+                                    <SelectItem value="ARCHIVED" className="rounded-xl font-bold text-red-500 focus:bg-red-50 focus:text-red-700">Arsip</SelectItem>
                                   </SelectContent>
                                 </Select>
-                                <FormMessage />
+                                <FormMessage className="text-[10px]" />
                               </FormItem>
                             )}
                           />
@@ -1599,17 +1619,21 @@ export default function Inventory() {
                       </div>
                     </section>
 
-                    <section>
-                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Filter className="w-3 h-3" /> Klasifikasi & Relasi
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Section: Classification */}
+                    <section className="space-y-6">
+                      <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
+                        <div className="p-2 rounded-lg bg-indigo-50">
+                          <Filter className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Klasifikasi & Relasi</h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                         <FormField
                           control={form.control}
                           name="categoryId"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Kategori</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Kategori</FormLabel>
                               <Select
                                 value={field.value?.toString()}
                                 onValueChange={(v) => {
@@ -1620,17 +1644,17 @@ export default function Inventory() {
                                 }}
                               >
                                 <FormControl>
-                                  <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                                  <SelectTrigger className="h-12 rounded-xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-indigo-500 transition-all font-bold">
                                     <SelectValue placeholder="Kategori" />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent>
+                                <SelectContent className="rounded-2xl border-2 border-slate-100 shadow-xl">
                                   {categories?.filter((c: any) => c.status === "ACTIVE").map((c: any) => (
-                                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                                    <SelectItem key={c.id} value={c.id.toString()} className="rounded-xl font-bold">{c.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
@@ -1638,24 +1662,24 @@ export default function Inventory() {
                           control={form.control}
                           name="brandId"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Merek</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Merek</FormLabel>
                               <Select
                                 value={field.value?.toString()}
                                 onValueChange={(v) => field.onChange(Number(v))}
                               >
                                 <FormControl>
-                                  <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                                  <SelectTrigger className="h-12 rounded-xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-indigo-500 transition-all font-bold">
                                     <SelectValue placeholder="Merek" />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent>
+                                <SelectContent className="rounded-2xl border-2 border-slate-100 shadow-xl">
                                   {brands?.filter((b: any) => b.status === "ACTIVE" && Number(b.categoryId) === Number(categoryIdValue)).map((b: any) => (
-                                    <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
+                                    <SelectItem key={b.id} value={b.id.toString()} className="rounded-xl font-bold">{b.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
@@ -1663,75 +1687,146 @@ export default function Inventory() {
                           control={form.control}
                           name="supplierId"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Pemasok</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Pemasok</FormLabel>
                               <Select
                                 value={field.value?.toString()}
                                 onValueChange={(v) => field.onChange(Number(v))}
                               >
                                 <FormControl>
-                                  <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                                  <SelectTrigger className="h-12 rounded-xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-indigo-500 transition-all font-bold">
                                     <SelectValue placeholder="Pemasok" />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent>
+                                <SelectContent className="rounded-2xl border-2 border-slate-100 shadow-xl">
                                   {suppliers?.filter((s: any) => s.status === "ACTIVE").map((s: any) => (
-                                    <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                                    <SelectItem key={s.id} value={s.id.toString()} className="rounded-xl font-bold">{s.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
                       </div>
                     </section>
 
-                    <section>
-                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <ImageIcon className="w-3 h-3" /> Media & Deskripsi
-                      </h3>
-                      <div className="space-y-4">
+                    {/* Section: Carton Settings */}
+                    <section className={cn(
+                      "rounded-[2rem] p-6 border-2 transition-all relative overflow-hidden",
+                      supportsCartonValue ? "bg-blue-50/50 border-blue-100 shadow-sm" : "bg-slate-50/30 border-slate-100 opacity-60"
+                    )}>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-2 rounded-lg", supportsCartonValue ? "bg-blue-100" : "bg-slate-100")}>
+                            <Package className={cn("w-4 h-4", supportsCartonValue ? "text-blue-600" : "text-slate-400")} />
+                          </div>
+                          <h3 className={cn("text-sm font-black uppercase tracking-widest", supportsCartonValue ? "text-blue-700" : "text-slate-500")}>
+                            Penjualan Karton
+                          </h3>
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="supportsCarton"
+                          render={({ field }) => (
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-blue-600" />
+                            </FormControl>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-5">
+                        <FormField
+                          control={form.control}
+                          name="pcsPerCarton"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Isi per Karton</FormLabel>
+                              <FormControl>
+                                <Input type="number" disabled={!supportsCartonValue} className="h-12 rounded-xl bg-white border-2 border-slate-100 font-black tabular-nums focus:border-blue-500 transition-all" {...field} />
+                              </FormControl>
+                              <FormMessage className="text-[10px]" />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="cartonPrice"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Harga Karton</FormLabel>
+                              <FormControl>
+                                <MoneyInput
+                                  disabled={!supportsCartonValue}
+                                  valueDigits={String(field.value ?? "")}
+                                  onValueDigitsChange={(digits) => field.onChange(digitsToNumber(digits))}
+                                  placeholder="Rp 0"
+                                  className="h-12 rounded-xl bg-white border-2 border-slate-100 font-black tabular-nums focus:border-blue-500 transition-all"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-[10px]" />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </section>
+
+                    {/* Section: Media */}
+                    <section className="space-y-6">
+                      <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
+                        <div className="p-2 rounded-lg bg-rose-50">
+                          <ImageIcon className="w-4 h-4 text-rose-600" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Media & Deskripsi</h3>
+                      </div>
+                      
+                      <div className="space-y-5">
                         <FormField
                           control={form.control}
                           name="image"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="space-y-1.5">
                               <FormControl>
-                                <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex flex-col sm:flex-row gap-5">
                                   <div className={cn(
-                                    "w-full sm:w-32 h-32 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center relative overflow-hidden bg-slate-50 group transition-colors",
-                                    field.value && "border-solid border-blue-200 bg-blue-50/30"
+                                    "w-full sm:w-32 h-32 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center relative overflow-hidden bg-slate-50/50 group transition-all",
+                                    field.value && "border-solid border-rose-200 bg-rose-50/30"
                                   )}>
                                     {field.value ? (
                                       <>
-                                        <img src={getImageUrl(field.value)} alt="Preview" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                          <Button type="button" variant="ghost" size="icon" className="text-white" onClick={() => form.setValue('image', '')}>
+                                        <img src={getImageUrl(field.value)} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[2px]">
+                                          <Button type="button" variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-full" onClick={() => form.setValue('image', '')}>
                                             <Trash2 className="w-5 h-5" />
                                           </Button>
                                         </div>
                                       </>
                                     ) : (
                                       <>
-                                        <ImageIcon className="w-8 h-8 text-slate-300 mb-1" />
-                                        <span className="text-[10px] text-slate-400 font-bold uppercase">Foto Produk</span>
+                                        <div className="p-3 rounded-2xl bg-white shadow-sm mb-2">
+                                          <ImageIcon className="w-6 h-6 text-slate-300" />
+                                        </div>
+                                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider">Foto Produk</span>
                                       </>
                                     )}
                                   </div>
-                                  <div className="flex-1 space-y-2">
+                                  <div className="flex-1 space-y-3">
                                     <Input 
                                       type="file" 
                                       accept="image/*" 
                                       onChange={handleImageUpload} 
                                       disabled={uploading} 
-                                      className="h-11 rounded-xl cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                      className="h-12 rounded-xl border-2 border-slate-100 bg-slate-50/50 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-rose-500 file:text-white hover:file:bg-rose-600 transition-all"
                                     />
-                                    <p className="text-[10px] text-slate-400 italic">Format: JPG, PNG, WEBP. Maks: 2MB.</p>
+                                    <div className="flex items-center gap-2 px-1">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Format: JPG, PNG, WEBP • Maks: 2MB</p>
+                                    </div>
                                   </div>
                                 </div>
                               </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
@@ -1739,11 +1834,17 @@ export default function Inventory() {
                           control={form.control}
                           name="description"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Deskripsi Tambahan</FormLabel>
                               <FormControl>
-                                <Input placeholder="Tambahkan catatan atau deskripsi produk..." className="h-11 rounded-xl border-slate-200" {...field} value={field.value || ""} />
+                                <textarea 
+                                  placeholder="Tambahkan catatan atau deskripsi produk untuk detail lebih lanjut..." 
+                                  className="min-h-[100px] w-full p-4 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-rose-500 focus:ring-0 transition-all font-medium text-sm outline-none resize-none" 
+                                  {...field} 
+                                  value={field.value || ""} 
+                                />
                               </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
@@ -1752,27 +1853,33 @@ export default function Inventory() {
                   </div>
 
                   {/* Right Column: Pricing & Stock */}
-                  <div className="md:col-span-5 space-y-8">
-                    <section className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
-                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Banknote className="w-3 h-3 text-emerald-500" /> Harga & Margin
-                      </h3>
-                      <div className="space-y-4">
+                  <div className="lg:col-span-5 p-8 space-y-8 bg-slate-50/30">
+                    
+                    {/* Section: Pricing */}
+                    <section className="bg-white rounded-[2rem] p-6 border-2 border-slate-100 shadow-sm space-y-6">
+                      <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
+                        <div className="p-2 rounded-lg bg-emerald-50">
+                          <Banknote className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Harga & Margin</h3>
+                      </div>
+                      
+                      <div className="space-y-5">
                         <FormField
                           control={form.control}
                           name="costPrice"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Harga Beli (Modal)</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Harga Beli (Modal)</FormLabel>
                               <FormControl>
                                 <MoneyInput
                                   valueDigits={String(field.value ?? "")}
                                   onValueDigitsChange={(digits) => field.onChange(digitsToNumber(digits))}
                                   placeholder="Rp 0"
-                                  className="h-11 rounded-xl bg-white border-slate-200 text-lg font-bold"
+                                  className="h-14 rounded-2xl bg-slate-50 border-2 border-slate-100 text-xl font-black tabular-nums focus:bg-white focus:border-emerald-500 transition-all"
                                 />
                               </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
@@ -1780,44 +1887,57 @@ export default function Inventory() {
                           control={form.control}
                           name="price"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Harga Jual</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Harga Jual Satuan</FormLabel>
                               <FormControl>
                                 <MoneyInput
                                   valueDigits={String(field.value ?? "")}
                                   onValueDigitsChange={(digits) => field.onChange(digitsToNumber(digits))}
                                   placeholder="Rp 0"
-                                  className="h-11 rounded-xl bg-white border-slate-200 text-lg font-bold text-blue-600"
+                                  className="h-14 rounded-2xl bg-slate-50 border-2 border-slate-100 text-xl font-black text-cyan-600 tabular-nums focus:bg-white focus:border-cyan-500 transition-all"
                                 />
                               </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
-                        <div className="pt-2 flex justify-between items-center px-1">
-                          <span className="text-xs font-bold text-slate-400">Potensi Laba:</span>
-                          <span className="text-sm font-black text-emerald-600">
+                        
+                        <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex justify-between items-center group">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Potensi Laba</span>
+                            <span className="text-xs font-bold text-slate-400 italic tracking-tight">Per Transaksi</span>
+                          </div>
+                          <span className="text-lg font-black text-emerald-600 tabular-nums group-hover:scale-105 transition-transform">
                             {formatCurrency(Math.max(0, Number(form.watch("price") || 0) - Number(form.watch("costPrice") || 0)))}
                           </span>
                         </div>
                       </div>
                     </section>
 
-                    <section className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100 shadow-sm">
-                      <h3 className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <TrendingDown className="w-3 h-3 text-emerald-500" /> Penjualan Grosiran
-                      </h3>
-                      <div className="space-y-4">
+                    {/* Section: Wholesale */}
+                    <section className="bg-emerald-600 rounded-[2rem] p-6 shadow-lg shadow-emerald-200/50 space-y-6 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                        <TrendingUp className="w-24 h-24 text-white" />
+                      </div>
+                      
+                      <div className="flex items-center gap-3 pb-2 border-b border-white/10 relative z-10">
+                        <div className="p-2 rounded-lg bg-white/10 border border-white/20">
+                          <TrendingDown className="w-4 h-4 text-white" />
+                        </div>
+                        <h3 className="text-sm font-black text-white uppercase tracking-widest">Penjualan Grosiran</h3>
+                      </div>
+                      
+                      <div className="space-y-5 relative z-10">
                         <FormField
                           control={form.control}
                           name="wholesaleQty"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Min. Qty Grosir</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.2em] ml-1">Min. Qty Grosir</FormLabel>
                               <FormControl>
-                                <Input type="number" placeholder="Contoh: 12" className="h-11 rounded-xl bg-white border-slate-200 font-bold" {...field} />
+                                <Input type="number" placeholder="Contoh: 12" className="h-12 rounded-xl bg-white/10 border-white/20 text-white font-black placeholder:text-white/30 focus:bg-white/20 transition-all" {...field} />
                               </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
@@ -1825,28 +1945,33 @@ export default function Inventory() {
                           control={form.control}
                           name="wholesalePrice"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Harga Grosir (per Pcs)</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.2em] ml-1">Harga Grosir (per Pcs)</FormLabel>
                               <FormControl>
                                 <MoneyInput
                                   valueDigits={String(field.value ?? "")}
                                   onValueDigitsChange={(digits) => field.onChange(digitsToNumber(digits))}
                                   placeholder="Rp 0"
-                                  className="h-11 rounded-xl bg-white border-slate-200 text-lg font-bold text-emerald-600"
+                                  className="h-12 rounded-xl bg-white/10 border-white/20 text-white font-black tabular-nums focus:bg-white/20 transition-all"
                                 />
                               </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
                       </div>
                     </section>
 
-                    <section className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Boxes className="w-3 h-3 text-amber-500" /> Stok & Pengadaan
-                      </h3>
-                      <div className="grid grid-cols-2 gap-4">
+                    {/* Section: Stock */}
+                    <section className="bg-white rounded-[2rem] p-6 border-2 border-slate-100 shadow-sm space-y-6">
+                      <div className="flex items-center gap-3 pb-2 border-b border-slate-50">
+                        <div className="p-2 rounded-lg bg-amber-50">
+                          <Boxes className="w-4 h-4 text-amber-600" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Stok & Pengadaan</h3>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-5">
                         <FormField
                           control={form.control}
                           name="stock"
@@ -1858,18 +1983,17 @@ export default function Inventory() {
                             const remainder = isCarton ? stock % pcsPerCarton : 0;
 
                             return (
-                              <FormItem>
-                                <FormLabel className="text-slate-600 font-bold">Stok Awal (Unit Terkecil/Pcs)</FormLabel>
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Stok Pcs</FormLabel>
                                 <FormControl>
-                                  <Input type="number" className="h-11 rounded-xl border-slate-200 font-bold" {...field} />
+                                  <Input type="number" className="h-12 rounded-xl bg-slate-50 border-2 border-slate-100 font-black tabular-nums focus:bg-white focus:border-amber-500 transition-all" {...field} />
                                 </FormControl>
                                 {isCarton && (
-                                  <div className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-2 rounded-lg border border-blue-100 flex items-center gap-2">
-                                     <Package className="w-3 h-3" />
-                                     Setara: <span className="font-bold">{cartons} Karton</span> + <span className="font-bold">{remainder} Pcs</span>
+                                  <div className="text-[10px] text-amber-600 font-black bg-amber-50 px-2 py-1.5 rounded-lg border border-amber-100 uppercase tracking-tighter">
+                                     {cartons} Karton + {remainder} Pcs
                                   </div>
                                 )}
-                                <FormMessage />
+                                <FormMessage className="text-[10px]" />
                               </FormItem>
                             );
                           }}
@@ -1878,67 +2002,12 @@ export default function Inventory() {
                           control={form.control}
                           name="minStock"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-600 font-bold">Batas Min.</FormLabel>
+                            <FormItem className="space-y-1.5">
+                              <FormLabel className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Batas Min.</FormLabel>
                               <FormControl>
-                                <Input type="number" className="h-11 rounded-xl border-slate-200 font-bold" {...field} />
+                                <Input type="number" className="h-12 rounded-xl bg-slate-50 border-2 border-slate-100 font-black tabular-nums focus:bg-white focus:border-amber-500 transition-all" {...field} />
                               </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </section>
-
-                    <section className={cn(
-                      "rounded-3xl p-6 border transition-all",
-                      supportsCartonValue ? "bg-blue-50/50 border-blue-100 shadow-sm" : "bg-slate-50/30 border-slate-100 opacity-60"
-                    )}>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2">
-                          <Package className="w-3 h-3" /> Penjualan Karton
-                        </h3>
-                        <FormField
-                          control={form.control}
-                          name="supportsCarton"
-                          render={({ field }) => (
-                            <FormControl>
-                              <Switch checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="pcsPerCarton"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-500 text-[11px] font-bold">Isi per Karton</FormLabel>
-                              <FormControl>
-                                <Input type="number" disabled={!supportsCartonValue} className="h-10 rounded-xl bg-white border-slate-200" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="cartonPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-500 text-[11px] font-bold">Harga Karton</FormLabel>
-                              <FormControl>
-                                <MoneyInput
-                                  disabled={!supportsCartonValue}
-                                  valueDigits={String(field.value ?? "")}
-                                  onValueDigitsChange={(digits) => field.onChange(digitsToNumber(digits))}
-                                  placeholder="Rp 0"
-                                  className="h-10 rounded-xl bg-white border-slate-200"
-                                />
-                              </FormControl>
-                              <FormMessage />
+                              <FormMessage className="text-[10px]" />
                             </FormItem>
                           )}
                         />
@@ -1947,11 +2016,27 @@ export default function Inventory() {
                   </div>
                 </div>
               </div>
-              <div className="p-6 bg-slate-50 border-t flex flex-col sm:flex-row justify-end gap-3">
-                <Button type="button" variant="outline" className="h-11 px-8 rounded-xl order-2 sm:order-1" onClick={() => setIsDialogOpen(false)}>Batal</Button>
-                <Button type="submit" disabled={isCreating || isUpdating} className="h-11 px-10 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200 order-1 sm:order-2">
-                  {isCreating || isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  {editingProduct ? "Simpan Perubahan" : "Tambah Produk"}
+
+              <div className="absolute bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-md border-t border-slate-100 flex flex-col sm:flex-row justify-end items-center gap-3 shrink-0 z-20">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-100 order-2 sm:order-1 text-xs" 
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Batal
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isCreating || isUpdating} 
+                  className="w-full sm:w-auto h-12 px-10 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:-translate-y-0.5 transition-all order-1 sm:order-2 text-xs"
+                >
+                  {isCreating || isUpdating ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    editingProduct ? <Save className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />
+                  )}
+                  {editingProduct ? "Simpan Perubahan" : "Tambah Produk Baru"}
                 </Button>
               </div>
             </form>
