@@ -142,15 +142,14 @@ app.use((req, res, next) => {
       // setting up all the other routes so the catch-all route
       // doesn't interfere with the other routes
       if (process.env.NODE_ENV === "production") {
-        // Serve static files from the React app build directory
-        // Fix: Use 'dist/public' because vite.config.ts builds to 'dist/public'
-        // NOT 'client/dist'
-        app.use(express.static(path.resolve(__dirname, "../dist/public")));
+        const publicPath = path.resolve(__dirname, "public");
+        app.use(express.static(publicPath));
 
-        // The "catchall" handler: for any request that doesn't
-        // match one above, send back React's index.html file.
-        app.get("/{*path}", (_, res) => {
-          res.sendFile(path.resolve(__dirname, "../dist/public/index.html"));
+        app.get("*", (req, res) => {
+          if (req.path.startsWith("/api")) {
+            return res.status(404).json({ message: "API route not found" });
+          }
+          res.sendFile(path.resolve(publicPath, "index.html"));
         });
       } else {
         const { setupVite } = await import("./vite");
