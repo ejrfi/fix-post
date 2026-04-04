@@ -39,7 +39,7 @@ export class BackupService {
       await this.initializeBackupDir();
 
       const databaseUrl =
-        process.env.DATABASE_URL || "mysql://root:@localhost:3306/pos_system";
+        process.env.DATABASE_URL || process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL || "mysql://root:@localhost:3306/pos_system";
       const dbName = new URL(databaseUrl).pathname.slice(1) || "pos_system";
 
       // Parse connection string
@@ -105,7 +105,7 @@ export class BackupService {
       }
 
       const databaseUrl =
-        process.env.DATABASE_URL || "mysql://root:@localhost:3306/pos_system";
+        process.env.DATABASE_URL || process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL || "mysql://root:@localhost:3306/pos_system";
       const dbName = new URL(databaseUrl).pathname.slice(1) || "pos_system";
 
       // Parse connection string
