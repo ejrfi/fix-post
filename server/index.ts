@@ -145,7 +145,7 @@ app.use((req, res, next) => {
         const publicPath = path.resolve(__dirname, "public");
         app.use(express.static(publicPath));
 
-        app.get("*", (req, res) => {
+       app.get(/.*/,  (req, res) => {
           if (req.path.startsWith("/api")) {
             return res.status(404).json({ message: "API route not found" });
           }
