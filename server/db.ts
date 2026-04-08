@@ -2,56 +2,8 @@
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import * as schema from "@shared/schema";
-import * as dotenv from "dotenv";
 
-dotenv.config();
-
-// Railway often provides multiple connection URLs.
-// Priority: DATABASE_URL (common) > MYSQL_URL (internal) > MYSQL_PUBLIC_URL (external proxy)
-const dbUrl = process.env.DATABASE_URL || process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL;
-
-if (!dbUrl) {
-  if (process.env.NODE_ENV === "production") {
-    console.error("❌ CRITICAL ERROR: No database connection string found in environment variables.");
-    console.error("Make sure DATABASE_URL, MYSQL_URL, or MYSQL_PUBLIC_URL is set in Railway settings.");
-    process.exit(1);
-  } else {
-    console.warn("⚠️ Warning: DATABASE_URL is not set, falling back to localhost.");
-  }
-}
-
-// Log connection attempt (sanitize the URL for security)
-if (dbUrl) {
-  const urlObj = new URL(dbUrl);
-  console.log(`📡 Attempting to connect to database: ${urlObj.hostname}:${urlObj.port || '3306'}${urlObj.pathname}`);
-}
-
-export const poolConnection = mysql.createPool({
-  uri: dbUrl || "mysql://root:@localhost:3306/pos_system",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 10000,
-  ssl: dbUrl && dbUrl.includes("railway") ? { rejectUnauthorized: false } : undefined,
-});
-
-// Test connection on startup
-poolConnection.getConnection()
-  .then((conn) => {
-    console.log("✅ Database connected successfully.");
-    conn.release();
-  })
-  .catch((err) => {
-    console.error("❌ Database connection failed!");
-    console.error("Error Message:", err.message);
-    console.error("Error Code:", err.code);
-    console.error("SQL State:", err.sqlState);
-    
-    if (process.env.NODE_ENV === "production") {
-      console.error("Production connection failed. Check your Railway database settings.");
-    }
-  });
+export const poolConnection = mysql.createPool(process.env.DATABASE_URL || "mysql://root:@localhost:3306/pos_system");
 
 export const db = drizzle(poolConnection, { schema, mode: 'default' });
 
