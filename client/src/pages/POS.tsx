@@ -1679,23 +1679,23 @@ export default function POS() {
                 <p className="text-sm font-bold text-slate-700">{format(openShiftNow, "HH:mm")}</p>
               </div>
             </div>
+          </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button 
-                variant="outline" 
-                className="flex-1 h-14 rounded-xl border-2 font-bold transition-all"
-                onClick={() => setOpenShiftOpen(false)}
-              >
-                Batal
-              </Button>
-              <Button 
-                className="flex-[2] h-14 rounded-xl bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-200/50 font-bold transition-all hover:scale-[1.02] active:scale-95"
-                onClick={handleOpenShift} 
-                disabled={isOpeningShift}
-              >
-                {isOpeningShift ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5 mr-2" /> Buka Shift</>}
-              </Button>
-            </div>
+          <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <Button 
+              variant="outline" 
+              className="flex-1 h-14 rounded-xl border-2 font-bold bg-white transition-all hover:bg-slate-50"
+              onClick={() => setOpenShiftOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button 
+              className="flex-[2] h-14 rounded-xl bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-200/50 font-bold transition-all hover:scale-[1.02] active:scale-95"
+              onClick={handleOpenShift} 
+              disabled={isOpeningShift}
+            >
+              {isOpeningShift ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Plus className="w-5 h-5 mr-2" /> Buka Shift</>}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1825,23 +1825,23 @@ export default function POS() {
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                className="flex-1 h-14 rounded-xl border-2 font-bold transition-all"
-                onClick={() => setCloseShiftOpen(false)}
-              >
-                Batal
-              </Button>
-              <Button 
-                className="flex-[2] h-14 rounded-xl bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-200 font-bold transition-all hover:scale-[1.02] active:scale-95"
-                onClick={handleCloseShift} 
-                disabled={isClosingShift}
-              >
-                {isClosingShift ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Power className="w-5 h-5 mr-2" /> Tutup Shift Sekarang</>}
-              </Button>
-            </div>
+          <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <Button 
+              variant="outline" 
+              className="flex-1 h-14 rounded-xl border-2 font-bold bg-white transition-all hover:bg-slate-50"
+              onClick={() => setCloseShiftOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button 
+              className="flex-[2] h-14 rounded-xl bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-200 font-bold transition-all hover:scale-[1.02] active:scale-95"
+              onClick={handleCloseShift} 
+              disabled={isClosingShift}
+            >
+              {isClosingShift ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Power className="w-5 h-5 mr-2" /> Tutup Shift Sekarang</>}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
