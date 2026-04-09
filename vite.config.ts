@@ -16,6 +16,10 @@ export default defineConfig({
         name: "POS System",
         short_name: "POS",
         description: "Sistem POS Desktop Profesional",
+        start_url: "/",
+        scope: "/",
+        display: "standalone",
+        background_color: "#ffffff",
         theme_color: "#ffffff",
         icons: [
           {
