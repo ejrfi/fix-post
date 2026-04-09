@@ -1544,7 +1544,7 @@ export default function POS() {
                         recallSuspendedSale(sale.id, {
                           onSuccess: (recalledSale) => {
                             clearCart();
-                            setItems(recalledSale.items.map(i => ({
+                            const itemsToSet = recalledSale.items?.map(i => ({
                               id: i.productId,
                               name: i.productName,
                               price: i.unitPrice,
@@ -1557,7 +1557,8 @@ export default function POS() {
                               wholesalePrice: i.wholesalePrice,
                               unitType: i.unitType, // Ensure unitType is recalled
                               discount: i.discount / i.quantity, // Store per-unit discount
-                            })));
+                            })) ?? [];
+                            setItems(itemsToSet);
                             setCustomer(recalledSale.customer);
                             setPointsToRedeem(recalledSale.pointsToRedeem);
                             setRecallOpen(false);
@@ -1938,7 +1939,7 @@ export default function POS() {
                 <div className="text-center">{format(new Date(lastReceipt.transactionDate), "dd MMM yyyy, HH:mm")}</div> 
               </div>
               <Separator />
-              {lastReceipt.items.map((item, index) => (
+              {lastReceipt.items?.map((item, index) => (
                 <div key={index} className="flex justify-between text-sm">
                   <div>
                     {item.name} {item.isWholesale && <span className="text-green-600 text-xs font-bold">(GROSIR)</span>}

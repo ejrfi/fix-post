@@ -15,7 +15,7 @@
     "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5001 && electron .\"",
     "build": "npm run build:server && npm run build:client",
     "build:server": "tsx script/build.ts",
-    "build:client": "vite build --base ./",
+    "build:client": "vite build",
     "build:electron": "npm run build && electron-builder",
     "build:electron-win": "npm run build && electron-builder --win",
     "start": "node dist/index.cjs",
