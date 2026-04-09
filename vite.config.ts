@@ -13,7 +13,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
       },
       manifest: {
-        name: "Barokah frozen food",
+        name: "Barokah Frozen food",
         short_name: "Barokah",
         description: "Sistem POS Profesional Barokah Frozen Food",
         start_url: "/",
@@ -23,17 +23,17 @@ export default defineConfig({
         theme_color: "#06b6d4",
         icons: [
           {
-            src: "pwa-192x192.png",
+            src: "icon-192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "pwa-512x512.png",
+            src: "icon-512.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "pwa-512x512.png",
+            src: "icon-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable",
