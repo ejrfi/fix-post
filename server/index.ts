@@ -82,70 +82,27 @@ app.use((req, res, next) => {
     log(`Server running on port ${PORT}`);
   });
 
-  // 3. Run Database Setup & Route Registration in Background
-   (async () => {
-     try {
-       console.log("Starting background initialization...");
-       console.log("Registering routes...");
-       
-       // Schema & Table Setup
-       await ensureMultiUnitColumns();
-       await ensureProductPriceAuditsTable();
-    await ensureSuspendedSalesTable();
-    await ensureCashierShiftsTable();
-    await ensureCashierShiftSnapshotColumns();
-    await ensureSalesShiftIdColumn();
-    await ensureSalesStatusColumns();
-    await ensureReturnRefundMethodColumn();
-    await ensureReturnsEnhancementsSchema();
-    await ensureShiftReportsSchema();
-    await ensureAuditLogsTable();
-    await ensureAppSettingsTable();
-    await ensureDiscountsSchema();
-    await ensureEnterpriseInventorySchema();
-    await ensureCustomerMembershipSchema();
-
-    // Register API Routes
-    await registerRoutes(httpServer, app);
-    console.log("Routes registered.");
-
-    // === CRITICAL: Ensure Default Admin in Production ===
-    // This runs on EVERY startup, but internally it checks if users exist.
-    // If no users, it creates admin/admin123
+  // 3. Register routes and start DB setup
+  (async () => {
     try {
-      const initResult = await InitializationService.ensureDefaultAdmin();
-      if (initResult.created) {
-        console.log("✅ INITIALIZATION SUCCESS: Default admin created (admin / admin123)");
-      } else {
-        console.log("ℹ️ Initialization skipped: Users already exist.");
-      }
-    } catch (initErr) {
-      console.error("❌ Failed to ensure default admin:", initErr);
-    }
-    // ===================================================
+      console.log("Registering routes...");
+      await registerRoutes(httpServer, app);
+      console.log("Routes registered.");
 
-    // Global error handler
-    app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+      // Global error handler
+      app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
         const status = err.status || err.statusCode || 500;
         const message = err.message || "Internal Server Error";
-
         console.error("Internal Server Error:", err);
-
-        if (res.headersSent) {
-          return next(err);
-        }
-
+        if (res.headersSent) return next(err);
         return res.status(status).json({ message });
       });
 
-      // importantly only setup vite in development and after
-      // setting up all the other routes so the catch-all route
-      // doesn't interfere with the other routes
+      // Static files and SPA catch-all
       if (process.env.NODE_ENV === "production") {
         const publicPath = path.resolve(__dirname, "public");
         app.use(express.static(publicPath));
-
-       app.get("*", (req, res) => {
+        app.get("*", (req, res) => {
           if (req.path.startsWith("/api")) {
             return res.status(404).json({ message: "API route not found" });
           }
@@ -155,7 +112,46 @@ app.use((req, res, next) => {
         const { setupVite } = await import("./vite");
         await setupVite(httpServer, app);
       }
-      console.log("Background initialization complete.");
+
+      // Background DB Schema Initialization (Does not block route registration)
+      (async () => {
+        try {
+          console.log("Starting background database initialization...");
+          await ensureMultiUnitColumns();
+          await ensureProductPriceAuditsTable();
+          await ensureSuspendedSalesTable();
+          await ensureCashierShiftsTable();
+          await ensureCashierShiftSnapshotColumns();
+          await ensureSalesShiftIdColumn();
+          await ensureSalesStatusColumns();
+          await ensureReturnRefundMethodColumn();
+          await ensureReturnsEnhancementsSchema();
+          await ensureShiftReportsSchema();
+          await ensureAuditLogsTable();
+          await ensureAppSettingsTable();
+          await ensureDiscountsSchema();
+          await ensureEnterpriseInventorySchema();
+          await ensureCustomerMembershipSchema();
+
+          // Ensure default admin
+          try {
+            const initResult = await InitializationService.ensureDefaultAdmin();
+            if (initResult.created) {
+              console.log("✅ INITIALIZATION SUCCESS: Default admin created (admin / admin123)");
+            } else {
+              console.log("ℹ️ Initialization skipped: Users already exist.");
+            }
+          } catch (initErr) {
+            console.error("❌ Failed to ensure default admin:", initErr);
+          }
+          console.log("Database initialization complete.");
+        } catch (dbErr) {
+          console.error("Database initialization error:", dbErr);
+          console.log("⚠️ Application will continue, but database-dependent features may fail.");
+        }
+      })();
+
+      console.log("Server setup complete.");
     } catch (err) {
       console.error("Startup background error:", err);
     }

@@ -954,7 +954,7 @@ export default function POS() {
           ) : viewMode === "grid" ? (
             <div className="pb-20">
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {products.map((product) => (
+                {products.map((product) => product ? (
                   <ProductCard 
                     key={product.id} 
                     product={product} 
@@ -962,7 +962,7 @@ export default function POS() {
                     lowStockThreshold={posFilters?.lowStockThreshold ?? 10}
                     onClick={() => handleAddItem(product)} 
                   />
-                ))}
+                ) : null)}
                 {products.length === 0 && (
                   <div className="col-span-full">
                     <div className="text-center py-20 text-muted-foreground">
