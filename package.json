@@ -5,7 +5,7 @@
   "author": "GJarfy",
   "type": "module",
   "engines": {
-    "node": "24.x"
+    "node": "22.x"
   },
   "license": "MIT",
   "main": "dist/index.cjs",
@@ -107,7 +107,6 @@
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.5",
     "vaul": "^1.1.2",
-    "vite-plugin-pwa": "^0.20.5",
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
     "zod": "^3.24.2",
@@ -115,6 +114,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "vite-plugin-pwa": "^0.20.5",
     "@electron/notarize": "^2.3.0",
     "@replit/vite-plugin-cartographer": "^0.4.4",
     "@replit/vite-plugin-dev-banner": "^0.1.1",
