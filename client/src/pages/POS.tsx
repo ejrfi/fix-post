@@ -106,7 +106,7 @@ export default function POS() {
     sort,
     limit: viewMode === "grid" ? 48 : 60,
   });
-  const products = useMemo(() => productsQuery.data?.pages.flatMap(p => p.items) ?? [], [productsQuery.data]);
+  const products = useMemo(() => productsQuery.data?.pages.flatMap(p => p.items ?? []) ?? [], [productsQuery.data]);
   const isLoadingProducts = productsQuery.isLoading;
   const isLoadingMore = productsQuery.isFetchingNextPage;
   const { data: loyaltySettings } = useLoyaltySettings();
@@ -204,7 +204,9 @@ export default function POS() {
   const allDiscounts = activeDiscounts?.items ?? [];
 
   const getApplicableDiscounts = (product: any, price: number, quantity: number = 1) => {
+    if (!product || !allDiscounts) return [];
     return allDiscounts.filter(d => {
+      if (!d) return false;
       // 1. Customer validation
       if (d.customerType) {
         if (!customer) return false;
@@ -224,6 +226,7 @@ export default function POS() {
       
       return false;
     }).map(d => {
+      if (!d) return null;
       // Handle bulk discount from table if applicable
       const bulkQty = Number(d.bulkQty ?? 0);
       const useBulk = bulkQty > 0 && quantity >= bulkQty;
@@ -237,28 +240,29 @@ export default function POS() {
         amount = Number(dValue);
       }
       return { ...d, amount, priority: Number(d.priorityLevel ?? 0) };
-    });
+    }).filter(Boolean) as any[];
   };
 
   const calculateBestDiscount = (product: any, price: number, quantity: number = 1) => {
+    if (!product) return 0;
     const applicable = getApplicableDiscounts(product, price, quantity);
     if (applicable.length === 0) return 0;
 
     // Separate stackable and non-stackable
-    const stackable = applicable.filter(d => d.stackable);
-    const nonStackable = applicable.filter(d => !d.stackable);
+    const stackable = applicable.filter(d => d && d.stackable);
+    const nonStackable = applicable.filter(d => d && !d.stackable);
 
     let maxDiscount = 0;
 
     // Scenario 1: Best non-stackable discount
     if (nonStackable.length > 0) {
-      nonStackable.sort((a, b) => b.amount - a.amount || b.priority - a.priority);
-      maxDiscount = Math.max(maxDiscount, nonStackable[0].amount);
+      nonStackable.sort((a, b) => (b?.amount ?? 0) - (a?.amount ?? 0) || (b?.priority ?? 0) - (a?.priority ?? 0));
+      maxDiscount = Math.max(maxDiscount, nonStackable[0]?.amount ?? 0);
     }
 
     // Scenario 2: Sum of all stackable discounts
     if (stackable.length > 0) {
-      const stackableSum = stackable.reduce((sum, d) => sum + d.amount, 0);
+      const stackableSum = stackable.reduce((sum, d) => sum + (d?.amount ?? 0), 0);
       maxDiscount = Math.max(maxDiscount, stackableSum);
     }
 
@@ -986,6 +990,7 @@ export default function POS() {
           ) : (
             <div className="space-y-2 pb-20">
               {products.map((product) => {
+                if (!product) return null;
                 const discount = calculateBestDiscount(product, Number(product.price));
                 const finalPrice = Math.max(0, Number(product.price) - discount);
                 const isOutOfStock = product.stock === 0;
@@ -1532,11 +1537,11 @@ export default function POS() {
           <div className="grid gap-4 py-4">
             {suspendedSales && suspendedSales.length > 0 ? (
               <div className="space-y-2">
-                {suspendedSales.map((sale) => (
+                {suspendedSales?.map((sale) => (
                   <div key={sale.id} className="flex items-center justify-between p-3 border rounded-md">
                     <div>
                       <div className="font-semibold">{sale.note || `Transaksi ${format(new Date(sale.createdAt), "dd MMM, HH:mm")}`}</div>
-                      <div className="text-sm text-muted-foreground">{formatCurrency(sale.total)} • {sale.items.length} item</div>
+                      <div className="text-sm text-muted-foreground">{formatCurrency(sale.total)} • {(sale.items?.length ?? 0)} item</div>
                     </div>
                     <Button
                       size="sm"
