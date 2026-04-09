@@ -13,14 +13,14 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
       },
       manifest: {
-        name: "POS System",
-        short_name: "POS",
-        description: "Sistem POS Desktop Profesional",
+        name: "Barokah frozen food",
+        short_name: "Barokah",
+        description: "Sistem POS Profesional Barokah Frozen Food",
         start_url: "/",
         scope: "/",
         display: "standalone",
         background_color: "#ffffff",
-        theme_color: "#ffffff",
+        theme_color: "#06b6d4",
         icons: [
           {
             src: "pwa-192x192.png",

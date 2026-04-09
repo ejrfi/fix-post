@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/Sidebar";
+import { SplashScreen } from "@/components/SplashScreen";
+import { AnimatePresence } from "framer-motion";
 import Login from "@/pages/Login";
 import POS from "@/pages/POS";
 import Dashboard from "@/pages/Dashboard";
@@ -152,9 +154,21 @@ function Router() {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <AnimatePresence>
+          {showSplash && <SplashScreen />}
+        </AnimatePresence>
         <Router />
         <Toaster />
       </TooltipProvider>
